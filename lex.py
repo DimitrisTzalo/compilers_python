@@ -161,6 +161,7 @@ class Lex:
         
         
         
+        
 
   
     def lex_states(self):
@@ -170,11 +171,12 @@ class Lex:
         try:
             while self.index < len(self.content):
                 chr = self.content[self.index]
+                
                 if self.state == self.start_state:
+                    if chr == '\n':
+                            self.current_line += 1
                     if chr.isspace():
                         next_state = self.start_state
-                        if chr == '\n':
-                            self.current_line += 1
                         self.index += 1
                         continue
                     elif chr.isdigit():
@@ -191,7 +193,7 @@ class Lex:
                         next_state = self.groupSymbols_token
                     elif chr in self.relationalOperators:
                         if chr == '<':
-                            next_state = self.lessthan_state
+                           next_state = self.lessthan_state
                         elif chr == '>':
                             next_state = self.greaterthan_state
                         else:
@@ -206,6 +208,7 @@ class Lex:
                         self.state = next_state
                         next_state = ''
                         continue
+                    
                     elif chr == '}': # error
                         self.readen_string += chr
                         self.error(self.readen_string, self.current_line)
@@ -229,9 +232,11 @@ class Lex:
                         self.error(self.readen_string, self.current_line)
                         self.index += 1
                         continue
-
+                    
+                    # PROTA DIAVASE META GRAPSE
                     if next_state != self.start_state or next_state != self.rem_state:
                         self.readen_string += chr
+                        
                     
                 
                 elif self.state == self.dig_state:
@@ -239,6 +244,7 @@ class Lex:
                         self.readen_string += chr
                         next_state = self.dig_state
                     elif chr.isalpha():
+                        #FIX THIS
                         self.error()
                     else:
                         next_state = self.number_token
@@ -253,7 +259,6 @@ class Lex:
                         next_state = self.identifier_token
                         self.resetStartState(self.readen_string, next_state, self.current_line)
                         continue
-
                 elif self.state == self.addOperator_token:
                     
                     next_state = self.addOperator_token
@@ -277,9 +282,17 @@ class Lex:
                     next_state = self.groupSymbols_token
                     self.resetStartState(self.readen_string, next_state, self.current_line)
                     continue
+
+
                 elif self.state == self.lessthan_state:
-                    self.readen_string += chr
-                    if self.readen_string in self.multiTokens:
+                    
+                    if chr in self.valid_characters and self.readen_string + chr not in self.multiTokens:
+                        next_state = self.relationalOperator_token
+                        self.resetStartState(self.readen_string, next_state, self.current_line)
+                        
+                        continue
+                    elif self.readen_string + chr in self.multiTokens:
+                        self.readen_string += chr
                         next_state = self.relationalOperator_token
                         self.resetStartState(self.readen_string, next_state, self.current_line)
                         self.index += 1
@@ -288,9 +301,15 @@ class Lex:
                     else:
                         self.error()
 
+
                 elif self.state == self.greaterthan_state:
-                    self.readen_string += chr
-                    if self.readen_string in self.multiTokens:
+                    if chr in self.valid_characters and self.readen_string + chr not in self.multiTokens:
+                        next_state = self.relationalOperator_token
+                        self.resetStartState(self.readen_string, next_state, self.current_line)
+                        
+                        continue
+                    elif self.readen_string + chr in self.multiTokens:
+                        self.readen_string += chr
                         next_state = self.relationalOperator_token
                         self.resetStartState(self.readen_string, next_state, self.current_line)
                         self.index += 1
@@ -305,8 +324,13 @@ class Lex:
                     self.index += 1
                     continue
                 elif self.state == self.asgn_state:
-                    self.readen_string += chr
-                    if self.readen_string in self.multiTokens:
+                    ##if chr in self.valid_characters and self.readen_string + chr not in self.multiTokens:
+                        ##next_state = self.relationalOperator_token
+                        ##self.resetStartState(self.readen_string, next_state, self.current_line)
+                        
+                        ##continue
+                    if self.readen_string + chr in self.multiTokens:
+                        self.readen_string += chr
                         next_state = self.assignent_token
                         self.resetStartState(self.readen_string, next_state, self.current_line)
                         self.index += 1
@@ -323,7 +347,7 @@ class Lex:
                     if chr == '\n':
                         self.current_line += 1
                 
-                
+                # DES PROTA AYTO BEFORE TOKENS
                 self.index += 1
                 self.state = next_state
                 next_state = ''
