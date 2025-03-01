@@ -1,6 +1,6 @@
 # DIMITRIOS PAGONIS 4985
 # DIMITRIOS TZALOKOSTAS 4994
-##22
+
 
 import string
 import sys
