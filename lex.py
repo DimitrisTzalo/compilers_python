@@ -169,12 +169,17 @@ class Lex:
         next_state = ''
         
         try:
-            while self.index < len(self.content):
+            while self.index <= len(self.content):
+                if self.index == len(self.content):
+                    # Handle end of file
+                    if self.state != self.start_state:
+                        self.resetStartState(self.readen_string, self.state, self.current_line)
+                    
+                    break
+
                 chr = self.content[self.index]
                 
                 if self.state == self.start_state:
-                    if chr == '\n':
-                            self.current_line += 1
                     if chr.isspace():
                         next_state = self.start_state
                         self.index += 1
@@ -212,31 +217,29 @@ class Lex:
                     elif chr == '}': # error
                         self.readen_string += chr
                         self.error(self.readen_string, self.current_line)
-                        self.index += 1
+                        #self.index += 1
                         if chr == '\n':
                             self.current_line += 1
                         
                         self.state = next_state
-                        next_state = ''
+                        next_state = self.start_state
                         continue
                     
-
                     elif chr == '_':
                         self.readen_string += chr
-                        self.error(self.readen_string, self.current_line)
+                        self.error(self.readen_string, self.current_line) #error
+                        self.index+=1
                         continue
                     
-
                     elif chr not in self.valid_characters:
                         self.readen_string += chr
-                        self.error(self.readen_string, self.current_line)
+                        self.error(self.readen_string, self.current_line) #error
                         self.index += 1
                         continue
                     
                     # PROTA DIAVASE META GRAPSE
                     if next_state != self.start_state or next_state != self.rem_state:
                         self.readen_string += chr
-                        
                     
                 
                 elif self.state == self.dig_state:
@@ -244,7 +247,6 @@ class Lex:
                         self.readen_string += chr
                         next_state = self.dig_state
                     elif chr.isalpha():
-                        #FIX THIS
                         self.error()
                     else:
                         next_state = self.number_token
@@ -351,7 +353,7 @@ class Lex:
                 self.index += 1
                 self.state = next_state
                 next_state = ''
-            if  self.index >= len(self.content):
+            if self.index >= len(self.content):
                 print("eof reached")
         except Exception as e:
             print(e)
@@ -361,4 +363,3 @@ class Lex:
 if __name__ == "__main__":
     file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")
     lex = Lex(1, file_path, '')
-
