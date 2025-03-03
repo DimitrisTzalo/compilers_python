@@ -13,7 +13,7 @@ class Token:
         self.line_number = line_number
     
     def __str__(self):
-        return f"String: {self.recognized_string}, Family: {self.family}, Line: {self.line_number}"
+        return f"String: {self.recognized_string} Family: {self.family} Line: {self.line_number}"
 
 class Lex:
     # characters and allowed symbols start
@@ -135,6 +135,7 @@ class Lex:
     def error(self, readen_string, current_line):
         print(f"Lexical error at line {self.current_line}: {self.readen_string}")
         self.readen_string = self.readen_string[:-1]
+        #print("string is",self.readen_string)
         #self.index -= 1
         self.state = self.start_state
         
@@ -172,14 +173,19 @@ class Lex:
             while self.index <= len(self.content):
                 if self.index == len(self.content):
                     # Handle end of file
+                    print('strong is', self.readen_string,'and state is', self.state)
                     if self.state != self.start_state:
+                        print('mphke')
                         self.resetStartState(self.readen_string, self.state, self.current_line)
-                    
+                    else:
+                        print("EOF reached")
                     break
 
                 chr = self.content[self.index]
                 
                 if self.state == self.start_state:
+                    if chr == '\n':
+                        self.current_line += 1
                     if chr.isspace():
                         next_state = self.start_state
                         self.index += 1
@@ -243,11 +249,19 @@ class Lex:
                     
                 
                 elif self.state == self.dig_state:
+                    
                     if chr.isdigit():
                         self.readen_string += chr
                         next_state = self.dig_state
                     elif chr.isalpha():
-                        self.error()
+                        
+                        self.readen_string += chr
+                        self.error(self.readen_string, self.current_line)
+                        
+                        
+                        
+                        break
+                        
                     else:
                         next_state = self.number_token
                         self.resetStartState(self.readen_string, next_state, self.current_line)
