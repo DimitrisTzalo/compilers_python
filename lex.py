@@ -12,8 +12,8 @@ class Token:
         self.family = family
         self.line_number = line_number
     
-    def __str__(self):
-        return f"String: {self.recognized_string} Family: {self.family} Line: {self.line_number}"
+    def __repr__(self):
+        return f"[{self.recognized_string} {self.family} {self.line_number}]"
 
 class Lex:
     # characters and allowed symbols start
@@ -122,7 +122,7 @@ class Lex:
         self.index = 0
         self.state = self.start_state
         self.readen_string = ''
-        self.lex_states()
+        self.results = []
    
     def read_file_content(self, file_path):
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -135,8 +135,6 @@ class Lex:
     def error(self, readen_string, current_line):
         print(f"Lexical error at line {self.current_line}: {self.readen_string}")
         self.readen_string = self.readen_string[:-1]
-        #print("string is",self.readen_string)
-        #self.index -= 1
         self.state = self.start_state
         
     
@@ -146,19 +144,18 @@ class Lex:
             next_state = self.keyword_token
 
         token_family = self.tokens[next_state]
-        token = Token(self.readen_string, token_family, line_number)
-        print(token)
-
-        return token
+        return Token(self.readen_string, token_family, line_number)
 
     def check_keyword(self, string):
         if string in self.keywords:
             return True
         return False
     def resetStartState(self, readen_string,next_state, line_number):
-        self.next_token(self.readen_string, next_state, self.current_line)
+        token = self.next_token(self.readen_string, next_state, self.current_line)
         self.readen_string = ''
         self.state = self.start_state
+        self.results.append(token)
+        return self.results
         
         
         
@@ -173,10 +170,9 @@ class Lex:
             while self.index <= len(self.content):
                 if self.index == len(self.content):
                     # Handle end of file
-                    print('strong is', self.readen_string,'and state is', self.state)
                     if self.state != self.start_state:
-                        print('mphke')
-                        self.resetStartState(self.readen_string, self.state, self.current_line)
+
+                        return self.resetStartState(self.readen_string, self.state, self.current_line)
                     else:
                         print("EOF reached")
                     break
@@ -229,19 +225,19 @@ class Lex:
                         
                         self.state = next_state
                         next_state = self.start_state
-                        continue
+                        break
                     
                     elif chr == '_':
                         self.readen_string += chr
                         self.error(self.readen_string, self.current_line) #error
                         self.index+=1
-                        continue
+                        break
                     
                     elif chr not in self.valid_characters:
                         self.readen_string += chr
                         self.error(self.readen_string, self.current_line) #error
                         self.index += 1
-                        continue
+                        break
                     
                     # PROTA DIAVASE META GRAPSE
                     if next_state != self.start_state or next_state != self.rem_state:
@@ -257,15 +253,12 @@ class Lex:
                         
                         self.readen_string += chr
                         self.error(self.readen_string, self.current_line)
-                        
-                        
-                        
                         break
                         
                     else:
                         next_state = self.number_token
-                        self.resetStartState(self.readen_string, next_state, self.current_line)
-                        continue
+                        return self.resetStartState(self.readen_string, next_state, self.current_line)
+                        
                 elif self.state == self.idk_state:
                     if chr.isalpha() or chr.isdigit() or chr == '_':
                         self.readen_string += chr
@@ -273,72 +266,76 @@ class Lex:
                         next_state = self.idk_state
                     else:
                         next_state = self.identifier_token
-                        self.resetStartState(self.readen_string, next_state, self.current_line)
-                        continue
+                        #print ('returns',self.resetStartState(self.readen_string, next_state, self.current_line))
+                        return self.resetStartState(self.readen_string, next_state, self.current_line)
+
                 elif self.state == self.addOperator_token:
                     
                     next_state = self.addOperator_token
-                    self.resetStartState(self.readen_string, next_state, self.current_line)
-                    continue
+                    return self.resetStartState(self.readen_string, next_state, self.current_line)
+                    #continue
 
                 elif self.state == self.mulOperator_token:
                     
                     next_state = self.mulOperator_token
-                    self.resetStartState(self.readen_string, next_state, self.current_line)
-                    continue
+                    return self.resetStartState(self.readen_string, next_state, self.current_line)
+                    #continue
 
                 elif self.state == self.delimeter_token:
                     
                     next_state = self.delimeter_token
-                    self.resetStartState(self.readen_string, next_state, self.current_line)
-                    continue
+                    return self.resetStartState(self.readen_string, next_state, self.current_line)
+                    #continue
 
                 elif self.state == self.groupSymbols_token:
                     
                     next_state = self.groupSymbols_token
-                    self.resetStartState(self.readen_string, next_state, self.current_line)
-                    continue
+                    return self.resetStartState(self.readen_string, next_state, self.current_line)
+                    #continue
 
 
                 elif self.state == self.lessthan_state:
                     
                     if chr in self.valid_characters and self.readen_string + chr not in self.multiTokens:
                         next_state = self.relationalOperator_token
-                        self.resetStartState(self.readen_string, next_state, self.current_line)
+                        return self.resetStartState(self.readen_string, next_state, self.current_line)
                         
-                        continue
+                        #continue
                     elif self.readen_string + chr in self.multiTokens:
                         self.readen_string += chr
                         next_state = self.relationalOperator_token
-                        self.resetStartState(self.readen_string, next_state, self.current_line)
                         self.index += 1
-                        continue
+                        return self.resetStartState(self.readen_string, next_state, self.current_line)
+                        #continue
                 
                     else:
-                        self.error()
+                        
+                        self.error(self.readen_string, self.current_line)
+                        break
 
 
                 elif self.state == self.greaterthan_state:
                     if chr in self.valid_characters and self.readen_string + chr not in self.multiTokens:
                         next_state = self.relationalOperator_token
-                        self.resetStartState(self.readen_string, next_state, self.current_line)
+                        return self.resetStartState(self.readen_string, next_state, self.current_line)
                         
-                        continue
+                        #continue
                     elif self.readen_string + chr in self.multiTokens:
                         self.readen_string += chr
                         next_state = self.relationalOperator_token
-                        self.resetStartState(self.readen_string, next_state, self.current_line)
                         self.index += 1
-                        continue
+                        return self.resetStartState(self.readen_string, next_state, self.current_line)
+                        #continue
                     else:
-                        self.error()
+                        self.error(self.readen_string, self.current_line)
+                        break
 
                 elif self.state == self.relationalOperator_token:
                     self.readen_string += chr
                     next_state = self.relationalOperator_token
-                    self.resetStartState(self.readen_string, next_state, self.current_line)
                     self.index += 1
-                    continue
+                    return self.resetStartState(self.readen_string, next_state, self.current_line)
+                    #continue
                 elif self.state == self.asgn_state:
                     ##if chr in self.valid_characters and self.readen_string + chr not in self.multiTokens:
                         ##next_state = self.relationalOperator_token
@@ -348,12 +345,12 @@ class Lex:
                     if self.readen_string + chr in self.multiTokens:
                         self.readen_string += chr
                         next_state = self.assignent_token
-                        self.resetStartState(self.readen_string, next_state, self.current_line)
                         self.index += 1
-                        continue
+                        return self.resetStartState(self.readen_string, next_state, self.current_line)
+                        #continue
                     else: #error
                         self.error(self.readen_string, self.current_line)
-                        continue
+                        break
                 elif self.state == self.rem_state:
                     if chr == '}':
                         next_state = self.start_state
@@ -367,13 +364,238 @@ class Lex:
                 self.index += 1
                 self.state = next_state
                 next_state = ''
+
+                if len(self.readen_string) > 30:
+                    self.error(self.readen_string, self.current_line)
+                    print("Length out of range")
+                    break
             if self.index >= len(self.content):
                 print("eof reached")
         except Exception as e:
             print(e)
+        
        
+        
+        
+
+
+
+class Syntaktikos:
+    def __init__(self, line_number, file_path, token):
+        self.line_number = line_number
+        self.file_path = file_path
+        self.token = token
+        self.lexer = Lex(line_number, file_path, token)
+        self.lexer_results = []
+        self.program()
+
+    def program(self):
+        self.lexer_results = self.lexer.lex_states()
+        if not self.lexer_results:
+            print("ERROR: No tokens found")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "πρόγραμμα":
+            self.lexer_results = self.lexer.lex_states()
+            print(self.lexer_results) #proodos pinaka
+            if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.programblock()
+            else:
+                print(f"ERROR: Den yparxei onoma programmatos, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            print(f"ERROR: H leksi 'πρόγραμμα' den yparxei stin arxi tou programmatos, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+
+
+    def programblock(self):
+
+        self.declarations()
+        self.subprograms()
+        #self.lexer_results = self.lexer.lex_states()
+        print(self.lexer_results)
+
+        if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_προγράμματος":
+            self.lexer_results = self.lexer.lex_states()
+            
+            self.sequence()
+
+            if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_προγράμματος":
+                self.lexer_results = self.lexer.lex_states()
+            else:
+                print(f"ERROR: Den yparxei leksi 'τέλος_προγράμματος', line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            print(f"ERROR: Den yparxei leksi 'αρχή_προγράμματος', line {self.lexer_results[-1].line_number}")
+            exit(-1)
+
+        
+        
+    def declarations(self):
+       self.lexer_results = self.lexer.lex_states()
+       print('declarations:', self.lexer_results)
+       while self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "δήλωση":
+            self.lexer_results = self.lexer.lex_states()
+            self.varlist()
+            
+    def varlist(self):
+        print('Varlist:', self.lexer_results)
+        if self.lexer_results and self.lexer_results[-1].family == "identifier":
+            self.lexer_results = self.lexer.lex_states()
+            while self.lexer_results and self.lexer_results[-1].family == "delimeter" and self.lexer_results[-1].recognized_string == ',':
+                self.lexer_results = self.lexer.lex_states()
+                if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                    self.lexer_results = self.lexer.lex_states()
+                else:
+                    print(f"ERROR: Den yparxei onoma metablitis, line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+        else:
+            print(f"ERROR: Den yparxei onoma metablitis, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+        
+
+    def subprograms(self):
+        print("Subprograms:", self.lexer_results)
+        while self.lexer_results and (self.lexer_results[-1].family == "keyword" and (self.lexer_results[-1].recognized_string == "συνάρτηση" or self.lexer_results[-1].recognized_string == "διαδικασία")):
+            if self.lexer_results[-1].recognized_string == "συνάρτηση":
+                self.func()
+            else:
+                self.proc()
+    
+    def func(self):
+        print('Func:', self.lexer_results)
+        
+        if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "συνάρτηση":
+            self.lexer_results = self.lexer.lex_states()
+            if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.lexer_results = self.lexer.lex_states()
+                
+                if self.lexer_results and self.lexer_results[-1].recognized_string == '(':
+                    self.lexer_results = self.lexer.lex_states()
+                    self.formalparlist()
+                    if self.lexer_results and self.lexer_results[-1].recognized_string == ')':
+                        self.lexer_results = self.lexer.lex_states()
+                        self.funcblock()
+                    else:
+                        print(f"ERROR: Den kleinei h deksia parenthesi meta thn formalparlist, line {self.lexer_results[-1].line_number}")
+                        exit(-1)
+                else:
+                    print(f"ERROR: Den anoigei h aristeri parenthesi prin thn formalparlist, line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: Perimenoume to id meta to function, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            print(f"ERROR: Den yparxei function, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+
+    def proc(self):
+        print('Proc:', self.lexer_results)
+        if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαδικασία":
+            self.lexer_results = self.lexer.lex_states()
+            if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.lexer_results = self.lexer.lex_states()
+                if self.lexer_results and self.lexer_results[-1].recognized_string == '(':
+                    self.lexer_results = self.lexer.lex_states()
+                    self.formalparlist()
+                    if self.lexer_results and self.lexer_results[-1].recognized_string == ')':
+                        self.lexer_results = self.lexer.lex_states()
+                        self.procblock()
+                    else:
+                        print(f"ERROR: Den kleinei h deksia parenthesi meta thn formalparlist, line {self.lexer_results[-1].line_number}")
+                        exit(-1)
+                else:
+                    print(f"ERROR: Den anoigei h aristeri parenthesi prin thn formalparlist, line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: Perimenoume to id meta to procedure, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+
+
+    def formalparlist(self):
+        print('Formal parlist:', self.lexer_results)
+
+        if self.lexer_results and self.lexer_results[-1].family == "identifier":
+            self.varlist()
+        else:
+            print(f"ERROR: Den yparxei id sti formalparlist, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+
+    def funcblock(self):
+        print('Funcblock:', self.lexer_results)
+        if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαπροσωπεία":
+            self.lexer_results = self.lexer.lex_states()
+            self.funcinput()
+            self.funcoutput()
+            self.declarations()
+            if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_συνάρτησης":
+                self.lexer_results = self.lexer.lex_states()
+                self.sequence()
+                if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_συνάρτησης":
+                    self.lexer_results = self.lexer.lex_states()
+                else:
+                    print(f"ERROR: H leksi 'τέλος_συνάρτησης' den yparxei sto telos tis sinartisis, line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: H leksi 'αρχή_συνάρτησης' den yparxei stin arxi tis sinartisis, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            print(f"ERROR: H leksi 'διαπροσωπεία' den yparxei stin arxi tis sinartisis, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+
+    
+    
+    
+    def procblock(self):
+        print('Procblock:', self.lexer_results)
+        if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαπροσωπεία":
+            self.lexer_results = self.lexer.lex_states()
+            self.funcinput()
+            self.funcoutput()
+            self.declarations()
+            if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_διαδικασίας":
+                self.lexer_results = self.lexer.lex_states()
+                self.sequence()
+                if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_διαδικασίας":
+                    self.lexer_results = self.lexer.lex_states()
+                else:
+                    print(f"ERROR: H leksi 'τέλος_διαδικασίας' den yparxei sto telos tis diadikasias, line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: H leksi 'αρχή_διαδικασίας' den yparxei stin arxi tis diadikasias, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+                print(f"ERROR: H leksi 'διαπροσωπεία' den yparxei stin arxi tis diadikasias, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+
+
+        
+    def funcinput(self):
+        print('Funcinput:', self.lexer_results)
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "είσοδος":
+            self.lexer_results = self.lexer.lex_states()
+            self.varlist()
+
+
+    def funcoutput(self):
+        print('Funcoutput:', self.lexer_results)
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "έξοδος":
+            self.lexer_results = self.lexer.lex_states()
+            self.varlist()
+
+    def sequence(self):
+        print("Sequence")
+        self.statement()
+        while self.lexer_results and self.lexer_results[-1].family == "delimeter" and self.lexer_results[-1].recognized_string == ';':
+            self.lexer_results = self.lexer.lex_states()
+            self.statement()
+
+    def statement(self):
+        print("Statement")
+        pass
+
             
 
 if __name__ == "__main__":
     file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")
-    lex = Lex(1, file_path, '')
+    syntax = Syntaktikos(1, file_path, '')
