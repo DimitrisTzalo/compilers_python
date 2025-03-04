@@ -170,12 +170,13 @@ class Lex:
             while self.index <= len(self.content):
                 if self.index == len(self.content):
                     # Handle end of file
-                    if self.state != self.start_state:
-
+                   if self.state != self.start_state:
+                        print('a')
                         return self.resetStartState(self.readen_string, self.state, self.current_line)
-                    else:
+                   else:
                         print("EOF reached")
-                    break
+                        break
+                    
 
                 chr = self.content[self.index]
                 
@@ -388,6 +389,7 @@ class Syntaktikos:
         self.lexer = Lex(line_number, file_path, token)
         self.lexer_results = []
         self.program()
+        print(self.lexer_results)
 
     def program(self):
         self.lexer_results = self.lexer.lex_states()
@@ -399,7 +401,9 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             print(self.lexer_results) #proodos pinaka
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.lexer_results = self.lexer.lex_states()
                 self.programblock()
+                
             else:
                 print(f"ERROR: Den yparxei onoma programmatos, line {self.lexer_results[-1].line_number}")
                 exit(-1)
@@ -409,11 +413,11 @@ class Syntaktikos:
 
 
     def programblock(self):
-
+        print("program block ",self.lexer_results)
         self.declarations()
         self.subprograms()
         #self.lexer_results = self.lexer.lex_states()
-        print(self.lexer_results)
+       
 
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_προγράμματος":
             self.lexer_results = self.lexer.lex_states()
@@ -422,6 +426,7 @@ class Syntaktikos:
 
             if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_προγράμματος":
                 self.lexer_results = self.lexer.lex_states()
+                
             else:
                 print(f"ERROR: Den yparxei leksi 'τέλος_προγράμματος', line {self.lexer_results[-1].line_number}")
                 exit(-1)
@@ -432,9 +437,10 @@ class Syntaktikos:
         
         
     def declarations(self):
-       self.lexer_results = self.lexer.lex_states()
+       #self.lexer_results = self.lexer.lex_states()
        print('declarations:', self.lexer_results)
        while self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "δήλωση":
+            print("mesa")
             self.lexer_results = self.lexer.lex_states()
             self.varlist()
             
@@ -584,16 +590,388 @@ class Syntaktikos:
             self.varlist()
 
     def sequence(self):
-        print("Sequence")
+        print("Sequence", self.lexer_results)
         self.statement()
         while self.lexer_results and self.lexer_results[-1].family == "delimeter" and self.lexer_results[-1].recognized_string == ';':
             self.lexer_results = self.lexer.lex_states()
             self.statement()
 
     def statement(self):
-        print("Statement")
-        pass
+        print("Statement:", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+        if self.lexer_results[-1].family == "identifier":
+            self.assignment_stat()
+        elif self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "εάν":
+            self.if_stat()
+        elif self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "όσο":
+            self.while_stat()
+        elif self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "επανάλαβε":
+            self.do_stat()
+        elif self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "για":
+            self.for_stat()
+        elif self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διάβασε":
+            self.input_stat()
+        elif self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "γράψε":
+            self.print_stat()
+        elif self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "εκτέλεσε":
+            self.call_stat()
+        else:
+            print(f"ERROR: H εντολή που δώσατε δεν ανήκει στη γλώσσα, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+    
+    def assignment_stat(self):
+        print("assignment",self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+            
+        if self.lexer_results[-1].family == "identifier":
+            self.lexer_results = self.lexer.lex_states()
+            
+            if self.lexer_results and self.lexer_results[-1].recognized_string == ":=":
+                self.lexer_results = self.lexer.lex_states()
+                self.expression()
+            else:
+                print(f"ERROR: Prepei na yparxei to symvolo anathesis meta to onoma tis metavlitis, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            print(f"ERROR: Den yparxei onoma metavlitis, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+    
+    def if_stat(self):
+        print("if_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
 
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "εάν":
+            self.lexer_results = self.lexer.lex_states()
+            self.condition()
+
+            if self.lexer_results and self.lexer_results[-1].recognized_string == "τότε":
+                self.lexer_results = self.lexer.lex_states()
+                self.sequence()
+                self.elsepart()
+
+                if self.lexer_results and self.lexer_results[-1].recognized_string == "εάν_τέλος":
+                    self.lexer_results = self.lexer.lex_states()
+                else:
+                    print(f"ERROR: Den yparxei 'εάν_τέλος', line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: Den yparxei 'τότε', line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            print(f"ERROR: Den yparxei 'εάν', line {self.lexer_results[-1].line_number}")
+            exit(-1)
+    def elsepart(self):
+        print("else_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αλλιώς":
+            self.lexer_results = self.lexer.lex_states()
+            self.sequence()
+    def while_stat(self):
+        print("while_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "όσο":
+            self.lexer_results = self.lexer.lex_states()
+            self.condition()
+
+            if self.lexer_results and self.lexer_results[-1].recognized_string == "επανάλαβε":
+                self.lexer_results = self.lexer.lex_states()
+                self.sequence()
+
+                if self.lexer_results and self.lexer_results[-1].recognized_string == "όσο_τέλος":
+                    self.lexer_results = self.lexer.lex_states()
+                else:
+                    print(f"ERROR: Den yparxei 'όσο_τέλος', line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: Den yparxei 'επανάλαβε', line {self.lexer_results[-1].line_number}")
+                exit(-1)
+    def do_stat(self):
+        print("do_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "επανάλαβε":
+            self.lexer_results = self.lexer.lex_states()
+            self.sequence()
+
+            if self.lexer_results and self.lexer_results[-1].recognized_string == "όσο_τέλος":
+                self.lexer_results = self.lexer.lex_states()
+
+                self.condition()
+            else:
+                print(f"ERROR: Den yparxei 'όσο_τέλος', line {self.lexer_results[-1].line_number}")
+                exit(-1)
+    
+    def for_stat(self):
+        print("for_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "για":
+            self.lexer_results = self.lexer.lex_states()
+            if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.lexer_results = self.lexer.lex_states()
+                if self.lexer_results and self.lexer_results[-1].recognized_string == ":=":
+                    self.lexer_results = self.lexer.lex_states()
+                    self.expression()
+                    if self.lexer_results and self.lexer_results[-1].recognized_string == "έως":
+                        self.lexer_results = self.lexer.lex_states()
+                        self.expression()
+                        if self.lexer_results and self.lexer_results[-1].recognized_string == "με_βήμα":
+                            self.lexer_results = self.lexer.lex_states()
+                            self.expression()
+                            if self.lexer_results and self.lexer_results[-1].recognized_string == "επανάλαβε":
+                                self.lexer_results = self.lexer.lex_states()
+                                self.sequence()
+                                if self.lexer_results and self.lexer_results[-1].recognized_string == "για_τέλος":
+                                    self.lexer_results = self.lexer.lex_states()
+                                else:
+                                    print(f"ERROR: Den yparxei 'για_τέλος', line {self.lexer_results[-1].line_number}")
+                                    exit(-1)
+                            else:
+                                print(f"ERROR: Den yparxei 'επανάλαβε', line {self.lexer_results[-1].line_number}")
+                                exit(-1)
+                        else:
+                            print(f"ERROR: Den yparxei 'με_βήμα', line {self.lexer_results[-1].line_number}")
+                            exit(-1)
+                    else:
+                        print(f"ERROR: Den yparxei 'έως', line {self.lexer_results[-1].line_number}")
+                        exit(-1)
+                else:
+                    print(f"ERROR: Den yparxei ':=', line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: Den yparxei id, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+    
+    def print_stat(self):
+        print("print_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "γράψε":
+            self.lexer_results = self.lexer.lex_states()
+            self.expression()
+        
+    def input_stat(self):
+        print("input_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διάβασε":
+            self.lexer_results = self.lexer.lex_states()
+            if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.lexer_results = self.lexer.lex_states()
+            else:
+                print(f"ERROR: Den yparxei id, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+    
+    def call_stat(self):
+        print("call_stat", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "εκτέλεσε":
+            self.lexer_results = self.lexer.lex_states()
+            if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.lexer_results = self.lexer.lex_states()
+                self.idtail()
+            else:
+                print(f"ERROR: Den yparxei id, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+       
+
+
+    def idtail(self):
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].recognized_string == "(":
+            self.actualpars()
+        
+    def actualpars(self):
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].recognized_string == "(":
+            self.lexer_results = self.lexer.lex_states()
+            
+            self.actualparlist()
+            
+            if self.lexer_results and self.lexer_results[-1].recognized_string == ")":
+                self.lexer_results = self.lexer.lex_states()
+            else:
+                print(f"ERROR: Den kleinei h ), line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        
+    def actualparlist(self):
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        self.actualparitem()
+
+        while self.lexer_results and self.lexer_results[-1].recognized_string == ",":
+            self.lexer_results = self.lexer.lex_states()
+            self.actualparitem()    
+    
+    
+    
+    def actualparitem(self):
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].recognized_string == "%":
+            self.lexer_results = self.lexer.lex_states()
+            
+            if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                self.lexer_results = self.lexer.lex_states()
+            else:
+                print(f"ERROR: Perimenei kanonika onoma metavlitis meta to '%', line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            self.expression()
+            
+            
+    def condition(self):
+        self.boolterm()
+    
+        while self.lexer_results and self.lexer_results[-1].recognized_string == "ή":
+            self.lexer_results = self.lexer.lex_states()
+            self.boolterm()
+
+    def boolterm(self):
+        self.boolfactor()
+        
+        while self.lexer_results and self.lexer_results[-1].recognized_string == "και":
+            self.lexer_results = self.lexer.lex_states()
+            self.boolfactor()
+
+    def boolfactor(self):
+        if self.lexer_results and self.lexer_results[-1].recognized_string == "όχι":
+            self.lexer_results = self.lexer.lex_states()
+            
+            if self.lexer_results and self.lexer_results[-1].recognized_string == "[":
+                self.lexer_results = self.lexer.lex_states()
+                self.condition()
+                
+                if self.lexer_results and self.lexer_results[-1].recognized_string == "]":
+                    self.lexer_results = self.lexer.lex_states()
+                else:
+                    print(f"ERROR: Den yparxei ] meta tin synthiki stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
+                    exit(-1)
+            else:
+                print(f"ERROR: Theloume [ meta to not stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == "[":
+            self.lexer_results = self.lexer.lex_states()
+            self.condition()
+            
+            if self.lexer_results and self.lexer_results[-1].recognized_string == "]":
+                self.lexer_results = self.lexer.lex_states()
+            else:
+                print(f"ERROR: Den yparxei ] meta tin synthiki stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+        else:
+            self.expression()
+            self.relational_oper()
+            self.expression()
+
+    def expression(self):
+        self.optional_sign()
+        self.term()
+
+        while self.lexer_results and (self.lexer_results[-1].recognized_string == "+" or self.lexer_results[-1].recognized_string == "-"):
+            self.add_oper()
+            self.term()
+
+    def term(self):
+        self.factor()
+        
+        while self.lexer_results and (self.lexer_results[-1].recognized_string == "*" or self.lexer_results[-1].recognized_string == "/"):
+            self.mul_oper()
+            self.factor()
+
+    def factor(self):
+        print("factor", self.lexer_results)
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+
+        if self.lexer_results[-1].family == "number":
+            self.lexer_results = self.lexer.lex_states()
+
+        elif self.lexer_results[-1].recognized_string == "(":
+            self.lexer_results = self.lexer.lex_states()
+            self.expression()
+
+            if self.lexer_results and self.lexer_results[-1].recognized_string == ")":
+                self.lexer_results = self.lexer.lex_states()
+            else:
+                print(f"ERROR: Theloume ) meta to expression stin FACTOR, line {self.lexer_results[-1].line_number}")
+                exit(-1)
+
+        elif self.lexer_results[-1].family == "identifier":
+            self.lexer_results = self.lexer.lex_states()
+            self.idtail()
+
+        else:
+            print(f"ERROR: Theloume constant h expression h variable stin FACTOR, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+
+    def relational_oper(self):
+        if self.lexer_results and self.lexer_results[-1].recognized_string == "=":
+            self.lexer_results = self.lexer.lex_states()
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == "<":
+            self.lexer_results = self.lexer.lex_states()
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == "<=":
+            self.lexer_results = self.lexer.lex_states()
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == "<>":
+            self.lexer_results = self.lexer.lex_states()
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == ">":
+            self.lexer_results = self.lexer.lex_states()
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == ">=":
+            self.lexer_results = self.lexer.lex_states()
+        else:
+            print(f"ERROR: Leipei = h < h <= h <> h >= h >, line {self.lexer_results[-1].line_number}")
+            exit(-1)
+
+    def add_oper(self):
+        if self.lexer_results and self.lexer_results[-1].recognized_string == "+":
+            self.lexer_results = self.lexer.lex_states()
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == "-":
+            self.lexer_results = self.lexer.lex_states()
+
+    def mul_oper(self):
+        if self.lexer_results and self.lexer_results[-1].recognized_string == "*":
+            self.lexer_results = self.lexer.lex_states()
+        elif self.lexer_results and self.lexer_results[-1].recognized_string == "/":
+            self.lexer_results = self.lexer.lex_states()
+
+    def optional_sign(self):
+        if self.lexer_results and (self.lexer_results[-1].recognized_string == "+" or self.lexer_results[-1].recognized_string == "-"):
+            self.add_oper()
             
 
 if __name__ == "__main__":
