@@ -171,7 +171,6 @@ class Lex:
                 if self.index == len(self.content):
                     # Handle end of file
                    if self.state != self.start_state:
-                        print('a')
                         return self.resetStartState(self.readen_string, self.state, self.current_line)
                    else:
                         print("EOF reached")
@@ -370,8 +369,7 @@ class Lex:
                     self.error(self.readen_string, self.current_line)
                     print("Length out of range")
                     break
-            if self.index >= len(self.content):
-                print("eof reached")
+            
         except Exception as e:
             print(e)
         
@@ -389,7 +387,7 @@ class Syntaktikos:
         self.lexer = Lex(line_number, file_path, token)
         self.lexer_results = []
         self.program()
-        print(self.lexer_results)
+        
 
     def program(self):
         self.lexer_results = self.lexer.lex_states()
@@ -399,21 +397,19 @@ class Syntaktikos:
 
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "πρόγραμμα":
             self.lexer_results = self.lexer.lex_states()
-            print(self.lexer_results) #proodos pinaka
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
                 self.lexer_results = self.lexer.lex_states()
                 self.programblock()
                 
             else:
-                print(f"ERROR: Den yparxei onoma programmatos, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει onoma programmatos, line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
-            print(f"ERROR: H leksi 'πρόγραμμα' den yparxei stin arxi tou programmatos, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: H leksi 'πρόγραμμα' Δεν υπάρχει stin arxi tou programmatos, line {self.lexer_results[-1].line_number}")
             exit(-1)
 
 
     def programblock(self):
-        print("program block ",self.lexer_results)
         self.declarations()
         self.subprograms()
         #self.lexer_results = self.lexer.lex_states()
@@ -428,24 +424,21 @@ class Syntaktikos:
                 self.lexer_results = self.lexer.lex_states()
                 
             else:
-                print(f"ERROR: Den yparxei leksi 'τέλος_προγράμματος', line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει leksi 'τέλος_προγράμματος', line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
-            print(f"ERROR: Den yparxei leksi 'αρχή_προγράμματος', line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Δεν υπάρχει leksi 'αρχή_προγράμματος', line {self.lexer_results[-1].line_number}")
             exit(-1)
 
         
         
     def declarations(self):
-       #self.lexer_results = self.lexer.lex_states()
-       print('declarations:', self.lexer_results)
        while self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "δήλωση":
-            print("mesa")
             self.lexer_results = self.lexer.lex_states()
             self.varlist()
             
     def varlist(self):
-        print('Varlist:', self.lexer_results)
+       
         if self.lexer_results and self.lexer_results[-1].family == "identifier":
             self.lexer_results = self.lexer.lex_states()
             while self.lexer_results and self.lexer_results[-1].family == "delimeter" and self.lexer_results[-1].recognized_string == ',':
@@ -453,15 +446,15 @@ class Syntaktikos:
                 if self.lexer_results and self.lexer_results[-1].family == "identifier":
                     self.lexer_results = self.lexer.lex_states()
                 else:
-                    print(f"ERROR: Den yparxei onoma metablitis, line {self.lexer_results[-1].line_number}")
+                    print(f"ERROR: Δεν υπάρχει onoma metablitis, line {self.lexer_results[-1].line_number}")
                     exit(-1)
         else:
-            print(f"ERROR: Den yparxei onoma metablitis, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Δεν υπάρχει onoma metablitis, line {self.lexer_results[-1].line_number}")
             exit(-1)
         
 
     def subprograms(self):
-        print("Subprograms:", self.lexer_results)
+        
         while self.lexer_results and (self.lexer_results[-1].family == "keyword" and (self.lexer_results[-1].recognized_string == "συνάρτηση" or self.lexer_results[-1].recognized_string == "διαδικασία")):
             if self.lexer_results[-1].recognized_string == "συνάρτηση":
                 self.func()
@@ -469,7 +462,7 @@ class Syntaktikos:
                 self.proc()
     
     def func(self):
-        print('Func:', self.lexer_results)
+        
         
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "συνάρτηση":
             self.lexer_results = self.lexer.lex_states()
@@ -479,6 +472,7 @@ class Syntaktikos:
                 if self.lexer_results and self.lexer_results[-1].recognized_string == '(':
                     self.lexer_results = self.lexer.lex_states()
                     self.formalparlist()
+
                     if self.lexer_results and self.lexer_results[-1].recognized_string == ')':
                         self.lexer_results = self.lexer.lex_states()
                         self.funcblock()
@@ -492,11 +486,11 @@ class Syntaktikos:
                 print(f"ERROR: Perimenoume to id meta to function, line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
-            print(f"ERROR: Den yparxei function, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Δεν υπάρχει function, line {self.lexer_results[-1].line_number}")
             exit(-1)
 
     def proc(self):
-        print('Proc:', self.lexer_results)
+        
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαδικασία":
             self.lexer_results = self.lexer.lex_states()
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
@@ -519,16 +513,16 @@ class Syntaktikos:
 
 
     def formalparlist(self):
-        print('Formal parlist:', self.lexer_results)
+        
 
         if self.lexer_results and self.lexer_results[-1].family == "identifier":
             self.varlist()
         else:
-            print(f"ERROR: Den yparxei id sti formalparlist, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Δεν υπάρχει id sti formalparlist, line {self.lexer_results[-1].line_number}")
             exit(-1)
 
     def funcblock(self):
-        print('Funcblock:', self.lexer_results)
+        
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαπροσωπεία":
             self.lexer_results = self.lexer.lex_states()
             self.funcinput()
@@ -540,20 +534,19 @@ class Syntaktikos:
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_συνάρτησης":
                     self.lexer_results = self.lexer.lex_states()
                 else:
-                    print(f"ERROR: H leksi 'τέλος_συνάρτησης' den yparxei sto telos tis sinartisis, line {self.lexer_results[-1].line_number}")
+                    print(f"ERROR: H leksi 'τέλος_συνάρτησης' Δεν υπάρχει sto telos tis sinartisis, line {self.lexer_results[-1].line_number}")
                     exit(-1)
             else:
-                print(f"ERROR: H leksi 'αρχή_συνάρτησης' den yparxei stin arxi tis sinartisis, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: H leksi 'αρχή_συνάρτησης' Δεν υπάρχει stin arxi tis sinartisis, line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
-            print(f"ERROR: H leksi 'διαπροσωπεία' den yparxei stin arxi tis sinartisis, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: H leksi 'διαπροσωπεία' Δεν υπάρχει stin arxi tis sinartisis, line {self.lexer_results[-1].line_number}")
             exit(-1)
 
     
     
     
     def procblock(self):
-        print('Procblock:', self.lexer_results)
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαπροσωπεία":
             self.lexer_results = self.lexer.lex_states()
             self.funcinput()
@@ -565,39 +558,39 @@ class Syntaktikos:
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_διαδικασίας":
                     self.lexer_results = self.lexer.lex_states()
                 else:
-                    print(f"ERROR: H leksi 'τέλος_διαδικασίας' den yparxei sto telos tis diadikasias, line {self.lexer_results[-1].line_number}")
+                    print(f"ERROR: H leksi 'τέλος_διαδικασίας' Δεν υπάρχει sto telos tis diadikasias, line {self.lexer_results[-1].line_number}")
                     exit(-1)
             else:
-                print(f"ERROR: H leksi 'αρχή_διαδικασίας' den yparxei stin arxi tis diadikasias, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: H leksi 'αρχή_διαδικασίας' Δεν υπάρχει stin arxi tis diadikasias, line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
-                print(f"ERROR: H leksi 'διαπροσωπεία' den yparxei stin arxi tis diadikasias, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: H leksi 'διαπροσωπεία' Δεν υπάρχει stin arxi tis diadikasias, line {self.lexer_results[-1].line_number}")
                 exit(-1)
 
 
         
     def funcinput(self):
-        print('Funcinput:', self.lexer_results)
+        
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "είσοδος":
             self.lexer_results = self.lexer.lex_states()
             self.varlist()
 
 
     def funcoutput(self):
-        print('Funcoutput:', self.lexer_results)
+        
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "έξοδος":
             self.lexer_results = self.lexer.lex_states()
             self.varlist()
 
     def sequence(self):
-        print("Sequence", self.lexer_results)
+       
         self.statement()
         while self.lexer_results and self.lexer_results[-1].family == "delimeter" and self.lexer_results[-1].recognized_string == ';':
             self.lexer_results = self.lexer.lex_states()
             self.statement()
 
     def statement(self):
-        print("Statement:", self.lexer_results)
+       
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -622,7 +615,7 @@ class Syntaktikos:
             exit(-1)
     
     def assignment_stat(self):
-        print("assignment",self.lexer_results)
+        
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -634,16 +627,15 @@ class Syntaktikos:
                 self.lexer_results = self.lexer.lex_states()
                 self.expression()
             else:
-                print(f"ERROR: Prepei na yparxei to symvolo anathesis meta to onoma tis metavlitis, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Πρέπει να υπάρχει το σύνολο ανάθεσης μετα το όνομα της μεταβλητής, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
         else:
-            print(f"ERROR: Den yparxei onoma metavlitis, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Δεν υπάρχει το όνομα μεταβλητής, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
             exit(-1)
     
     def if_stat(self):
-        print("if_stat", self.lexer_results)
         if not self.lexer_results:
-            print("ERROR: No tokens available")
+            
             exit(-1)
 
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "εάν":
@@ -654,20 +646,19 @@ class Syntaktikos:
                 self.lexer_results = self.lexer.lex_states()
                 self.sequence()
                 self.elsepart()
-
                 if self.lexer_results and self.lexer_results[-1].recognized_string == "εάν_τέλος":
                     self.lexer_results = self.lexer.lex_states()
                 else:
-                    print(f"ERROR: Den yparxei 'εάν_τέλος', line {self.lexer_results[-1].line_number}")
+                    print(f"ERROR: Δεν υπάρχει 'εάν_τέλος', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string} ")
                     exit(-1)
             else:
-                print(f"ERROR: Den yparxei 'τότε', line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει 'τότε', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
         else:
-            print(f"ERROR: Den yparxei 'εάν', line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Δεν υπάρχει 'εάν', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
             exit(-1)
     def elsepart(self):
-        print("else_stat", self.lexer_results)
+        
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -676,7 +667,7 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             self.sequence()
     def while_stat(self):
-        print("while_stat", self.lexer_results)
+    
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -692,13 +683,12 @@ class Syntaktikos:
                 if self.lexer_results and self.lexer_results[-1].recognized_string == "όσο_τέλος":
                     self.lexer_results = self.lexer.lex_states()
                 else:
-                    print(f"ERROR: Den yparxei 'όσο_τέλος', line {self.lexer_results[-1].line_number}")
+                    print(f"ERROR: Δεν υπάρχει 'όσο_τέλος', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                     exit(-1)
             else:
-                print(f"ERROR: Den yparxei 'επανάλαβε', line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει 'επανάλαβε', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
     def do_stat(self):
-        print("do_stat", self.lexer_results)
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -707,16 +697,15 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             self.sequence()
 
-            if self.lexer_results and self.lexer_results[-1].recognized_string == "όσο_τέλος":
+            if self.lexer_results and self.lexer_results[-1].recognized_string == "μέχρι":
                 self.lexer_results = self.lexer.lex_states()
 
                 self.condition()
             else:
-                print(f"ERROR: Den yparxei 'όσο_τέλος', line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει 'μέχρι', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
     
     def for_stat(self):
-        print("for_stat", self.lexer_results)
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -732,34 +721,42 @@ class Syntaktikos:
                         self.lexer_results = self.lexer.lex_states()
                         self.expression()
                         if self.lexer_results and self.lexer_results[-1].recognized_string == "με_βήμα":
-                            self.lexer_results = self.lexer.lex_states()
-                            self.expression()
+                            self.step()
                             if self.lexer_results and self.lexer_results[-1].recognized_string == "επανάλαβε":
                                 self.lexer_results = self.lexer.lex_states()
                                 self.sequence()
                                 if self.lexer_results and self.lexer_results[-1].recognized_string == "για_τέλος":
                                     self.lexer_results = self.lexer.lex_states()
                                 else:
-                                    print(f"ERROR: Den yparxei 'για_τέλος', line {self.lexer_results[-1].line_number}")
+                                    print(f"ERROR: Δεν υπάρχει 'για_τέλος', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                                     exit(-1)
                             else:
-                                print(f"ERROR: Den yparxei 'επανάλαβε', line {self.lexer_results[-1].line_number}")
+                                print(f"ERROR: Δεν υπάρχει 'επανάλαβε', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                                 exit(-1)
                         else:
-                            print(f"ERROR: Den yparxei 'με_βήμα', line {self.lexer_results[-1].line_number}")
+                            print(f"ERROR: Δεν υπάρχει 'με_βήμα', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                             exit(-1)
                     else:
-                        print(f"ERROR: Den yparxei 'έως', line {self.lexer_results[-1].line_number}")
+                        print(f"ERROR: Δεν υπάρχει 'έως', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                         exit(-1)
                 else:
-                    print(f"ERROR: Den yparxei ':=', line {self.lexer_results[-1].line_number}")
+                    print(f"ERROR: Δεν υπάρχει ':=', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                     exit(-1)
             else:
-                print(f"ERROR: Den yparxei id, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει id, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
+    def step(self):
+        if not self.lexer_results:
+            print("ERROR: No tokens available")
+            exit(-1)
+        if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "με_βήμα":
+            self.lexer_results = self.lexer.lex_states()
+            self.expression()
+       
+
     
     def print_stat(self):
-        print("print_stat", self.lexer_results)
+       
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -769,7 +766,7 @@ class Syntaktikos:
             self.expression()
         
     def input_stat(self):
-        print("input_stat", self.lexer_results)
+       
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -779,11 +776,11 @@ class Syntaktikos:
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
                 self.lexer_results = self.lexer.lex_states()
             else:
-                print(f"ERROR: Den yparxei id, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει id, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
     
     def call_stat(self):
-        print("call_stat", self.lexer_results)
+       
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -794,7 +791,7 @@ class Syntaktikos:
                 self.lexer_results = self.lexer.lex_states()
                 self.idtail()
             else:
-                print(f"ERROR: Den yparxei id, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει id, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
        
 
@@ -820,7 +817,7 @@ class Syntaktikos:
             if self.lexer_results and self.lexer_results[-1].recognized_string == ")":
                 self.lexer_results = self.lexer.lex_states()
             else:
-                print(f"ERROR: Den kleinei h ), line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν κλείνει η ), line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
         
     def actualparlist(self):
@@ -878,10 +875,10 @@ class Syntaktikos:
                 if self.lexer_results and self.lexer_results[-1].recognized_string == "]":
                     self.lexer_results = self.lexer.lex_states()
                 else:
-                    print(f"ERROR: Den yparxei ] meta tin synthiki stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
+                    print(f"ERROR: Δεν υπάρχει ] meta tin synthiki stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
                     exit(-1)
             else:
-                print(f"ERROR: Theloume [ meta to not stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Θέλουμε [ meta to not stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
                 exit(-1)
 
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "[":
@@ -891,7 +888,7 @@ class Syntaktikos:
             if self.lexer_results and self.lexer_results[-1].recognized_string == "]":
                 self.lexer_results = self.lexer.lex_states()
             else:
-                print(f"ERROR: Den yparxei ] meta tin synthiki stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Δεν υπάρχει ] meta tin synthiki stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
             self.expression()
@@ -914,7 +911,7 @@ class Syntaktikos:
             self.factor()
 
     def factor(self):
-        print("factor", self.lexer_results)
+        
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
@@ -929,7 +926,7 @@ class Syntaktikos:
             if self.lexer_results and self.lexer_results[-1].recognized_string == ")":
                 self.lexer_results = self.lexer.lex_states()
             else:
-                print(f"ERROR: Theloume ) meta to expression stin FACTOR, line {self.lexer_results[-1].line_number}")
+                print(f"ERROR: Θέλουμε ) μετά το expression στη FACTOR, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
 
         elif self.lexer_results[-1].family == "identifier":
@@ -937,11 +934,11 @@ class Syntaktikos:
             self.idtail()
 
         else:
-            print(f"ERROR: Theloume constant h expression h variable stin FACTOR, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Θέλουμε constant h expression h variable stin FACTOR, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
             exit(-1)
 
     def relational_oper(self):
-        if self.lexer_results and self.lexer_results[-1].recognized_string == "=":
+        if self.lexer_results and self.lexer_results[-1].recognized_string == ":=":
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "<":
             self.lexer_results = self.lexer.lex_states()
@@ -954,7 +951,7 @@ class Syntaktikos:
         elif self.lexer_results and self.lexer_results[-1].recognized_string == ">=":
             self.lexer_results = self.lexer.lex_states()
         else:
-            print(f"ERROR: Leipei = h < h <= h <> h >= h >, line {self.lexer_results[-1].line_number}")
+            print(f"ERROR: Λείπει := or < or <= or <> or > or >=, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
             exit(-1)
 
     def add_oper(self):
