@@ -971,6 +971,6 @@ class Syntaktikos:
             self.add_oper()
             
 
-if __name__ == "__main__":
-    file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")
-    syntax = Syntaktikos(1, file_path, '')
+
+file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")
+syntax = Syntaktikos(1, file_path, '')
