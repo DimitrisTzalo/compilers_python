@@ -528,6 +528,7 @@ class Syntaktikos:
             self.funcinput()
             self.funcoutput()
             self.declarations()
+            self.subprograms()
             if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_συνάρτησης":
                 self.lexer_results = self.lexer.lex_states()
                 self.sequence()
@@ -552,6 +553,7 @@ class Syntaktikos:
             self.funcinput()
             self.funcoutput()
             self.declarations()
+            self.subprograms()
             if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_διαδικασίας":
                 self.lexer_results = self.lexer.lex_states()
                 self.sequence()
