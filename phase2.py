@@ -384,12 +384,12 @@ class EndiamesosKwdikas:
         self.count = 1
         self.T_i = 1
     
-    def next_quad(self):
+    def nextQuad(self):
         
         return self.count
     
     def genQuad(self, one, two, three, four):
-        quad = [self.next_quad(), one, two, three, four] #dhmioyrgia 4adas
+        quad = [self.nextQuad(), one, two, three, four] #dhmioyrgia 4adas
         self.total_quads.append(quad)
         self.count += 1
         return quad
@@ -413,14 +413,14 @@ class EndiamesosKwdikas:
 
         return (i + j)
 
-    def backpatch(self, l, label_target):
+    def backPatch(self, l, label_target):
         # to l einai lista me deiktes pou deixnoyn poia quads den einai symplhrwmena 
 
         length_l = len(l)
         length_totalQuads = len(self.total_quads)
 
-        for i in length_l:
-            for j in length_totalQuads:
+        for i in range(length_l):
+            for j in range(length_totalQuads):
                 if(list[i] == self.total_quads[j][0] and self.total_quads[j][-1] == '_'):
                     self.total_quads[j][-1] = label_target
                     break
@@ -434,7 +434,12 @@ class Syntaktikos:
         self.token = token
         self.lexer = Lex(line_number, file_path, token)
         self.lexer_results = []
+        self.endiamesos = EndiamesosKwdikas()
         self.program()
+        
+        outputFile = open('intFile.int', 'w', encoding='utf-8')
+        self.intCode(outputFile)
+        outputFile.close()
         
 
     def program(self):
@@ -447,7 +452,7 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
                 self.lexer_results = self.lexer.lex_states()
-                self.programblock()
+                self.programblock(self.lexer_results[-1].recognized_string)
                 
             else:
                 print(f"ERROR: Δεν υπάρχει onoma programmatos, line {self.lexer_results[-1].line_number}")
@@ -457,7 +462,7 @@ class Syntaktikos:
             exit(-1)
 
 
-    def programblock(self):
+    def programblock(self, name):
         self.declarations()
         self.subprograms()
         #self.lexer_results = self.lexer.lex_states()
@@ -466,7 +471,10 @@ class Syntaktikos:
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_προγράμματος":
             self.lexer_results = self.lexer.lex_states()
             
+            self.endiamesos.genQuad('begin_block', name, '_', '_')
             self.sequence()
+            self.endiamesos.genQuad('halt','_','_','_')
+            self.endiamesos.genQuad('end_block',name,'_','_')
 
             if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_προγράμματος":
                 self.lexer_results = self.lexer.lex_states()
@@ -523,7 +531,7 @@ class Syntaktikos:
 
                     if self.lexer_results and self.lexer_results[-1].recognized_string == ')':
                         self.lexer_results = self.lexer.lex_states()
-                        self.funcblock()
+                        self.funcblock(self.lexer_results[-1].recognized_string)
                     else:
                         print(f"ERROR: Den kleinei h deksia parenthesi meta thn formalparlist, line {self.lexer_results[-1].line_number}")
                         exit(-1)
@@ -548,7 +556,7 @@ class Syntaktikos:
                     self.formalparlist()
                     if self.lexer_results and self.lexer_results[-1].recognized_string == ')':
                         self.lexer_results = self.lexer.lex_states()
-                        self.procblock()
+                        self.procblock(self.lexer_results[-1].recognized_string)
                     else:
                         print(f"ERROR: Den kleinei h deksia parenthesi meta thn formalparlist, line {self.lexer_results[-1].line_number}")
                         exit(-1)
@@ -569,7 +577,7 @@ class Syntaktikos:
             print(f"ERROR: Δεν υπάρχει id sti formalparlist, line {self.lexer_results[-1].line_number}")
             exit(-1)
 
-    def funcblock(self):
+    def funcblock(self, name):
         
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαπροσωπεία":
             self.lexer_results = self.lexer.lex_states()
@@ -578,7 +586,10 @@ class Syntaktikos:
             self.declarations()
             if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_συνάρτησης":
                 self.lexer_results = self.lexer.lex_states()
+
+                self.endiamesos.genQuad('begin_block', name, '_', '_')
                 self.sequence()
+                self.endiamesos.genQuad('end_block', name, '_', '_')
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_συνάρτησης":
                     self.lexer_results = self.lexer.lex_states()
                 else:
@@ -594,7 +605,7 @@ class Syntaktikos:
     
     
     
-    def procblock(self):
+    def procblock(self, name):
         if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "διαπροσωπεία":
             self.lexer_results = self.lexer.lex_states()
             self.funcinput()
@@ -602,7 +613,12 @@ class Syntaktikos:
             self.declarations()
             if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_διαδικασίας":
                 self.lexer_results = self.lexer.lex_states()
+
+                self.endiamesos.genQuad('begin_block', name, '_', '_')
                 self.sequence()
+                self.endiamesos.genQuad('end_block',name,'_','_')
+
+
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_διαδικασίας":
                     self.lexer_results = self.lexer.lex_states()
                 else:
@@ -688,12 +704,20 @@ class Syntaktikos:
 
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "εάν":
             self.lexer_results = self.lexer.lex_states()
-            self.condition()
+            
+            condition = self.condition()
+            self.endiamesos.backPatch(condition[0], self.endiamesos.nextQuad())
 
             if self.lexer_results and self.lexer_results[-1].recognized_string == "τότε":
                 self.lexer_results = self.lexer.lex_states()
                 self.sequence()
+
+                if_list = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                self.endiamesos.genQuad('jump', '_', '_', '_')
                 self.elsepart()
+
+                self.endiamesos.backPatch(if_list, self.endiamesos.nextQuad())
+
                 if self.lexer_results and self.lexer_results[-1].recognized_string == "εάν_τέλος":
                     self.lexer_results = self.lexer.lex_states()
                 else:
@@ -722,11 +746,18 @@ class Syntaktikos:
 
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "όσο":
             self.lexer_results = self.lexer.lex_states()
-            self.condition()
+            
+            current_quad = self.endiamesos.nextQuad()
+            condition = self.condition()
+
+            self.endiamesos.backPatch(condition[0], self.endiamesos.nextQuad())
 
             if self.lexer_results and self.lexer_results[-1].recognized_string == "επανάλαβε":
                 self.lexer_results = self.lexer.lex_states()
                 self.sequence()
+
+                self.endiamesos.genQuad('jump', '_', '_', current_quad)
+                self.endiamesos.backPatch(condition[1], self.endiamesos.nextQuad())
 
                 if self.lexer_results and self.lexer_results[-1].recognized_string == "όσο_τέλος":
                     self.lexer_results = self.lexer.lex_states()
@@ -743,12 +774,19 @@ class Syntaktikos:
 
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "επανάλαβε":
             self.lexer_results = self.lexer.lex_states()
+            
+            current_quad = self.endiamesos.nextQuad()
+
             self.sequence()
 
             if self.lexer_results and self.lexer_results[-1].recognized_string == "μέχρι":
                 self.lexer_results = self.lexer.lex_states()
 
-                self.condition()
+                condition = self.condition()
+
+                self.endiamesos.backPatch(condition[1], current_quad)
+                self.endiamesos.backPatch(condition[0], self.endiamesos.nextQuad())
+
             else:
                 print(f"ERROR: Δεν υπάρχει 'μέχρι', line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
@@ -761,18 +799,60 @@ class Syntaktikos:
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "για":
             self.lexer_results = self.lexer.lex_states()
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                id_rec_string = self.lexer_results[-1].recognized_string
                 self.lexer_results = self.lexer.lex_states()
                 if self.lexer_results and self.lexer_results[-1].recognized_string == ":=":
                     self.lexer_results = self.lexer.lex_states()
-                    self.expression()
+                    E_place1 = self.expression()
+
+                    self.endiamesos.genQuad(':=', E_place1, '_', id_rec_string)
+                    
                     if self.lexer_results and self.lexer_results[-1].recognized_string == "έως":
                         self.lexer_results = self.lexer.lex_states()
-                        self.expression()
+                        E_place2 = self.expression()
                         if self.lexer_results and self.lexer_results[-1].recognized_string == "με_βήμα":
-                            self.step()
+                            step = self.step()
+                            current_quad = self.endiamesos.nextQuad()
+
+                            L_thetiko = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                            self.endiamesos.genQuad('>', step, '0', '_')
+                            L_arnhtiko = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                            self.endiamesos.genQuad('<', step, '0', '_')
+                            L_mhden = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                            self.endiamesos.genQuad('=', step, '0', '_')
+
+                            self.endiamesos.backPatch(L_thetiko, self.endiamesos.nextQuad())
+                            L_thetiko_out = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                            self.endiamesos.genQuad('>=', id_rec_string, E_place2, '_')
+                            L_thetiko_in = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                            self.endiamesos.genQuad('jump', '_', '_', '_')
+
+                            self.endiamesos.backPatch(L_arnhtiko, self.endiamesos.nextQuad())
+                            L_arnhtiko_out = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                            self.endiamesos.genQuad('<=', id_rec_string, E_place2, '_')
+                            L_arnhtiko_in = self.endiamesos.makeList(self.endiamesos.nextQuad())
+                            self.endiamesos.genQuad('jump', '_', '_', '_')
+
+                            
+
+                            self.endiamesos.backPatch(L_mhden, self.endiamesos.nextQuad())
+
+
+
                             if self.lexer_results and self.lexer_results[-1].recognized_string == "επανάλαβε":
                                 self.lexer_results = self.lexer.lex_states()
+
+                                self.endiamesos.backPatch(L_thetiko_in, self.endiamesos.nextQuad())
+                                self.endiamesos.backPatch(L_arnhtiko_in, self.endiamesos.nextQuad())
+
                                 self.sequence()
+
+                                self.endiamesos.genQuad('+', id_rec_string, step, id_rec_string)
+                                self.endiamesos.genQuad('jump', '_', '_', current_quad)
+
+                                self.endiamesos.backPatch(L_thetiko_out, self.endiamesos.nextQuad())
+                                self.endiamesos.backPatch(L_arnhtiko_out, self.endiamesos.nextQuad())
+
                                 if self.lexer_results and self.lexer_results[-1].recognized_string == "για_τέλος":
                                     self.lexer_results = self.lexer.lex_states()
                                 else:
@@ -799,7 +879,8 @@ class Syntaktikos:
             exit(-1)
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "με_βήμα":
             self.lexer_results = self.lexer.lex_states()
-            self.expression()
+            return self.expression()
+        return '1'
        
 
     
@@ -811,7 +892,8 @@ class Syntaktikos:
 
         if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "γράψε":
             self.lexer_results = self.lexer.lex_states()
-            self.expression()
+            E_place = self.expression()
+            self.endiamesos.genQuad('out', E_place, '_', '_')
         
     def input_stat(self):
        
@@ -823,6 +905,8 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
                 self.lexer_results = self.lexer.lex_states()
+
+                self.endiamesos.genQuad('input', self.lexer_results[-1].recognized_string, '_', '_')
             else:
                 print(f"ERROR: Δεν υπάρχει id, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
@@ -837,20 +921,29 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
                 self.lexer_results = self.lexer.lex_states()
-                self.idtail()
+                self.idtail(self.lexer_results[-1].recognized_string, 0)
+
+                self.endiamesos.genQuad('call', self.lexer_results[-1].recognized_string, '_',  '_')
             else:
                 print(f"ERROR: Δεν υπάρχει id, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
                 exit(-1)
        
 
 
-    def idtail(self):
+    def idtail(self, name, caller):
         if not self.lexer_results:
             print("ERROR: No tokens available")
             exit(-1)
 
         if self.lexer_results[-1].recognized_string == "(":
             self.actualpars()
+
+            if (caller == 1):
+                tmp = self.endiamesos.newTemp()
+                self.endiamesos.genQuad('par', tmp, 'RET', '_')
+                self.endiamesos.genQuad('call', name, '_', '_')
+                return tmp
+        return name 
         
     def actualpars(self):
         if not self.lexer_results:
@@ -890,27 +983,51 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             
             if self.lexer_results and self.lexer_results[-1].family == "identifier":
+                current_string = self.lexer_results[-1].recognized_string
                 self.lexer_results = self.lexer.lex_states()
+
+                self.endiamesos.genQuad('par', current_string, 'REF', '_')
             else:
                 print(f"ERROR: Perimenei kanonika onoma metavlitis meta to '%', line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
-            self.expression()
+            E_place = self.expression()
+            self.endiamesos.genQuad('par', E_place, 'CV', '_')
             
             
     def condition(self):
-        self.boolterm()
+        bool_true1 = self.boolterm()
+
+        current_true = bool_true1[0]
+        current_false = bool_true1[1]
     
         while self.lexer_results and self.lexer_results[-1].recognized_string == "ή":
             self.lexer_results = self.lexer.lex_states()
-            self.boolterm()
+            self.endiamesos.backPatch(current_false, self.endiamesos.nextQuad())
+            
+            bool_true2 = self.boolterm()
+
+            current_true = self.endiamesos.merge(current_true, bool_true2[0])
+            current_false = bool_true2[1]
+        
+        return current_true, current_false
 
     def boolterm(self):
-        self.boolfactor()
+        bool_false1 = self.boolfactor()
+
+        current_true = bool_false1[0]
+        current_false = bool_false1[1]
         
         while self.lexer_results and self.lexer_results[-1].recognized_string == "και":
             self.lexer_results = self.lexer.lex_states()
-            self.boolfactor()
+
+            self.endiamesos.backPatch(current_true, self.endiamesos.nextQuad())
+            
+            bool_false2 = self.boolfactor()
+
+            current_false = self.endiamesos.merge(current_false, bool_false2[1])
+            current_true = bool_false2[0]
+        return current_true, current_false
 
     def boolfactor(self):
         if self.lexer_results and self.lexer_results[-1].recognized_string == "όχι":
@@ -918,7 +1035,10 @@ class Syntaktikos:
             
             if self.lexer_results and self.lexer_results[-1].recognized_string == "[":
                 self.lexer_results = self.lexer.lex_states()
-                self.condition()
+                condition = self.condition()
+
+                current_true = condition[1]
+                current_false = condition[0]
                 
                 if self.lexer_results and self.lexer_results[-1].recognized_string == "]":
                     self.lexer_results = self.lexer.lex_states()
@@ -931,7 +1051,10 @@ class Syntaktikos:
 
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "[":
             self.lexer_results = self.lexer.lex_states()
-            self.condition()
+            condition = self.condition()
+
+            current_true = condition[0]
+            current_false = condition[1]
             
             if self.lexer_results and self.lexer_results[-1].recognized_string == "]":
                 self.lexer_results = self.lexer.lex_states()
@@ -939,24 +1062,50 @@ class Syntaktikos:
                 print(f"ERROR: Δεν υπάρχει ] meta tin synthiki stin BOOLFACTOR, line {self.lexer_results[-1].line_number}")
                 exit(-1)
         else:
-            self.expression()
-            self.relational_oper()
-            self.expression()
+            E_place1 = self.expression()
+            relational_oper = self.relational_oper()
+            E_place2 = self.expression()
+
+            current_true = self.endiamesos.makeList(self.endiamesos.nextQuad())
+            self.endiamesos.genQuad(relational_oper, E_place1, E_place2, '_')
+            
+            current_false = self.endiamesos.makeList(self.endiamesos.nextQuad())
+            self.endiamesos.genQuad('jump', '_', '_', '_')
+        return current_true, current_false
 
     def expression(self):
-        self.optional_sign()
-        self.term()
+        optional_sign = self.optional_sign()
+        T_1place = self.term()
 
         while self.lexer_results and (self.lexer_results[-1].recognized_string == "+" or self.lexer_results[-1].recognized_string == "-"):
-            self.add_oper()
-            self.term()
+            add_Operation = self.add_oper()
+            T_2place = self.term()
+
+            #{P1}:
+            w = self.endiamesos.newTemp()
+            self.endiamesos.genQuad(add_Operation, T_1place, T_2place, w)
+            T_1place = w
+        
+        #{P2}:
+        E_place = T_1place
+        return E_place
+
+
 
     def term(self):
-        self.factor()
+        F_1place = self.factor()
         
         while self.lexer_results and (self.lexer_results[-1].recognized_string == "*" or self.lexer_results[-1].recognized_string == "/"):
-            self.mul_oper()
-            self.factor()
+            mul_Operation = self.mul_oper()
+            F_2place = self.factor()
+
+            #{P1}:
+            w = self.endiamesos.newTemp()
+            self.endiamesos.genQuad(mul_Operation, F_1place, F_2place, w)
+            F_1place = w
+        #{P2}:
+        T_place =F_1place
+        return T_place
 
     def factor(self):
         
@@ -965,11 +1114,13 @@ class Syntaktikos:
             exit(-1)
 
         if self.lexer_results[-1].family == "number":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
 
         elif self.lexer_results[-1].recognized_string == "(":
             self.lexer_results = self.lexer.lex_states()
-            self.expression()
+            E_place = self.expression()
+            current_string = E_place
 
             if self.lexer_results and self.lexer_results[-1].recognized_string == ")":
                 self.lexer_results = self.lexer.lex_states()
@@ -978,46 +1129,77 @@ class Syntaktikos:
                 exit(-1)
 
         elif self.lexer_results[-1].family == "identifier":
+            current_string_tmp = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
-            self.idtail()
+            current_string = self.idtail(current_string_tmp, 1)
 
         else:
             print(f"ERROR: Θέλουμε constant h expression h variable stin FACTOR, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
             exit(-1)
+        return current_string
 
     def relational_oper(self):
         if self.lexer_results and self.lexer_results[-1].recognized_string == ":=":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "<":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "<=":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "<>":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == ">":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == ">=":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         else:
             print(f"ERROR: Λείπει := or < or <= or <> or > or >=, line {self.lexer_results[-1].line_number} στο {self.lexer_results[-1].recognized_string}")
             exit(-1)
+        return current_string
 
     def add_oper(self):
         if self.lexer_results and self.lexer_results[-1].recognized_string == "+":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "-":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
+        return current_string
 
     def mul_oper(self):
         if self.lexer_results and self.lexer_results[-1].recognized_string == "*":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
         elif self.lexer_results and self.lexer_results[-1].recognized_string == "/":
+            current_string = self.lexer_results[-1].recognized_string
             self.lexer_results = self.lexer.lex_states()
+        return current_string
 
     def optional_sign(self):
         if self.lexer_results and (self.lexer_results[-1].recognized_string == "+" or self.lexer_results[-1].recognized_string == "-"):
-            self.add_oper()
-            
+            add_oper = self.add_oper()
+            return add_oper
+        return '+'
+    
+    def intCode(self, x):
+        lenQuads =  len(self.endiamesos.total_quads)
+        for i in range(lenQuads):
+            quad = self.endiamesos.total_quads[i]
+            x.write(str(quad[0]))
+            x.write(":  ")
+            x.write(str(quad[1]))
+            x.write("  ")
+            x.write(str(quad[2]))
+            x.write("  ")
+            x.write(str(quad[3]))
+            x.write("  ")
+            x.write(str(quad[4]))
+            x.write("\n")
 
 
 file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")
