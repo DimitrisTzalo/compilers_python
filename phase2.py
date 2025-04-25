@@ -433,11 +433,7 @@ class Syntaktikos:
         self.endiamesos = EndiamesosKwdikas()
         self.program()
         
-        print("Total Quads\n")
-
-        for i in range(len(self.endiamesos.total_quads)):
-            print(self.endiamesos.total_quads[i],"\n")
-
+        
         outputFile = open('intFile.int', 'w', encoding='utf-8')
         self.intCode(outputFile)
         outputFile.close()
