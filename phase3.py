@@ -416,12 +416,16 @@ class EndiamesosKwdikas:
     def backPatch(self, l, label_target):
         # to l einai lista me deiktes pou deixnoyn poia quads den einai symplhrwmena 
 
-        for quad_index in l:
-            for quad in self.total_quads:
-                if quad[0] == quad_index and quad[-1] == '_':
-                    quad[-1] = label_target
+        length_l = len(l)
+        length_totalQuads = len(self.total_quads)
+
+        for i in range(length_l):
+            for j in range(length_totalQuads):
+                if(list[i] == self.total_quads[j][0] and self.total_quads[j][-1] == '_'):
+                    self.total_quads[j][-1] = label_target
                     break
-        return 
+        return
+                  
 
 class Syntaktikos:
     def __init__(self, line_number, file_path, token):
