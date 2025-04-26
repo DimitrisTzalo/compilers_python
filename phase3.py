@@ -416,17 +416,167 @@ class EndiamesosKwdikas:
     def backPatch(self, l, label_target):
         # to l einai lista me deiktes pou deixnoyn poia quads den einai symplhrwmena 
 
-        length_l = len(l)
-        length_totalQuads = len(self.total_quads)
-
-        for i in range(length_l):
-            for j in range(length_totalQuads):
-                if(list[i] == self.total_quads[j][0] and self.total_quads[j][-1] == '_'):
-                    self.total_quads[j][-1] = label_target
+        for quad_index in l:
+            for quad in self.total_quads:
+                if quad[0] == quad_index and quad[-1] == '_':
+                    quad[-1] = label_target
                     break
-        return
-                  
+        return 
 
+
+### PINAKAS SYMBOLWN ####
+
+class SymbolTable:
+    def __init__(self):
+        self.allSymbolsList = [] ## edo einai o pinakas
+        self.entity = self.Entity()
+        self.scope = self.Scope()
+        self.argument = self.Argument()
+    
+    class Entity: #orthogwnio
+        def __init__(self):
+            self.outputFile = ''
+            self.name = ''
+            self.entityType = '' ##ti ontothta einai
+            self.variable = self.Variable()
+            self.funcorproc = self.FuncOrProc()
+            self.parameter = self.Parameter()
+            self.tmpvariable = self.tmpVariable()
+
+        class Variable:
+            def __init__(self):
+                self.type = ''
+                self.offset = 0
+        
+        class FuncOrProc:
+
+            def __init__(self):
+                self.type = ''
+                self.startQuad = 0
+                self.arguments = []
+                self.frameLength = 0
+        
+        class Parameter:
+            
+            def __init__(self):
+                self.parMode = 0
+                self.offest = 0
+
+        ##class Constant:
+           ## def __init__(self):
+
+        
+        class tmpVariable:
+
+            def __init__(self):
+                self.type = ''
+                self.offset = 0
+            
+    class Scope: #kyklos
+
+        def __init__(self):
+            self.name = ''
+            self.entityList = []
+            self.nestingLevel = 0
+
+
+    class Argument: #trigwno
+
+        def __init__(self):
+            self.name = ''
+            self.parMode = ''
+            self.type = ''
+    
+    def new_argument(self, new_arg):
+
+        self.allSymbolsList[-1].entityList[-1].funcorproc.arguments.append(new_arg)
+    
+    def new_entity(self, new_entity):
+        
+        self.allSymbolsList[-1].entityList.append(new_entity)
+    
+    def new_scope(self, newScope):
+
+        tmp = self.Scope()
+        tmp.name = newScope
+
+        self.Scope.nestingLevel = (self.allSymbolsList[-1].nestingLevel + 1) if self.allSymbolsList else 0
+
+        self.allSymbolsList.append(tmp)
+    
+    def delete_scope(self):
+        
+        if self.allSymbolsList:
+            removedScope = self.allSymbolsList.pop()
+
+            del removedScope
+    
+    def compute_offset(self):
+
+        count = 0
+        
+        if not self.allSymbolsList or not self.allSymbolsList[-1].entityList:
+            return 12 
+
+        count = sum(1 for ent in self.allSymbolsList[-1].entityList if ent.type in ('VAR', 'TEMP', 'PARAM'))
+
+        return 12 + count * 4
+
+    def compute_startQuad(self):
+        ## setting the startQuad ensures that the subprogram's starting point is correctly recorded and can be used for 
+        # generating and linking intermediate code.
+
+        if len(self.allSymbolsList) > 1:
+            self.allSymbolsList[-2].entityList[-1].funcorproc.startQuad = self.endiamesos.nextQuad()
+
+
+    def compute_framelength(self):
+
+        self.allSymbolsList[-2].entityList[-1].funcorproc.frameLength = self.compute_offset()
+    
+    def add_parameters(self):
+
+        for i in self.allSymbolsList[-2].entityList[-1].funcorproc.arguments:
+            ent = self.Entity()
+            ent.name = i.name
+            ent.type = 'PARAM'
+            ent.parameter.mode = i.parMode
+            ent.parameter.offest = self.compute_offset()
+            self.new_entity(ent)
+    
+    def print_Table(self):
+        
+       with open('symbolTable.sym', 'w', encoding='utf-8') as outputFile:
+        outputFile.write("#" * 90 + "\n")
+
+        for scope in reversed(self.allSymbolsList):
+            # Print scope details
+            outputFile.write(f"SCOPE: name: {scope.name} nestingLevel: {scope.nestingLevel}\n")
+            outputFile.write("\tENTITIES:\n")
+
+            for entity in scope.entityList:
+                # Print common entity details
+                outputFile.write(f"\tENTITY: name: {entity.name} type: {entity.entityType}")
+
+                # Handle specific entity types
+                if entity.entityType == 'VAR':
+                    outputFile.write(f" variable-type: {entity.variable.type} offset: {entity.variable.offset}")
+                elif entity.entityType == 'TEMP':
+                    outputFile.write(f" temp-type: {entity.tmpvariable.type} offset: {entity.tmpvariable.offset}")
+                elif entity.entityType == 'SUBPR':
+                    outputFile.write(f" subprogram-type: {entity.funcorproc.type} startQuad: {entity.funcorproc.startQuad} frameLength: {entity.funcorproc.frameLength}")
+                    outputFile.write("\n\t\tARGUMENTS:")
+                    for argument in entity.funcorproc.arguments:
+                        outputFile.write(f"\n\t\tARGUMENT: name: {argument.name} type: {argument.type} parMode: {argument.parMode}")
+                elif entity.entityType == 'PARAM':
+                    outputFile.write(f" mode: {entity.parameter.parMode} offset: {entity.parameter.offest}")
+
+                outputFile.write("\n")
+
+            outputFile.write("\n")
+
+        outputFile.write("#" * 90 + "\n\n")
+        
 class Syntaktikos:
     def __init__(self, line_number, file_path, token):
         self.line_number = line_number
@@ -437,11 +587,7 @@ class Syntaktikos:
         self.endiamesos = EndiamesosKwdikas()
         self.program()
         
-        print("Total Quads\n")
-
-        for i in range(len(self.endiamesos.total_quads)):
-            print(self.endiamesos.total_quads[i],"\n")
-
+        
         outputFile = open('intFile.int', 'w', encoding='utf-8')
         self.intCode(outputFile)
         outputFile.close()
