@@ -428,6 +428,7 @@ class EndiamesosKwdikas:
 
 class SymbolTable:
     def __init__(self):
+        self.endiamesos = EndiamesosKwdikas()
         self.allSymbolsList = [] ## edo einai o pinakas
         self.entity = self.Entity()
         self.scope = self.Scope()
@@ -585,6 +586,7 @@ class Syntaktikos:
         self.lexer = Lex(line_number, file_path, token)
         self.lexer_results = []
         self.endiamesos = EndiamesosKwdikas()
+        self.pinakasSymvolwn = SymbolTable()
         self.program()
         
         
@@ -618,7 +620,7 @@ class Syntaktikos:
 
     def programblock(self, name):
         
-        new_scope(name)
+        self.pinakasSymvolwn.new_scope(name)
         
         
         self.declarations()
@@ -637,8 +639,8 @@ class Syntaktikos:
             self.endiamesos.genQuad('halt','_','_','_')
             self.endiamesos.genQuad('end_block',name,'_','_')
             
-            print_Symbol_table()
-            delete_scope()
+            self.pinakasSymvolwn.print_Table()
+            self.pinakasSymvolwn.delete_scope()
 
             if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_προγράμματος":
                 self.lexer_results = self.lexer.lex_states()
@@ -655,7 +657,7 @@ class Syntaktikos:
     def declarations(self):
        while self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "δήλωση":
             self.lexer_results = self.lexer.lex_states()
-            self.varlist()
+            self.varlist_declarations()
             
     def varlist_declarations(self):
         """Handles variable declarations"""
@@ -664,11 +666,11 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
 
             # Create an Entity for the variable
-            ent = Entity()
+            ent = self.pinakasSymvolwn.Entity()
             ent.type = 'VAR'
             ent.name = id
-            ent.variable.offset = compute_offset()
-            new_entity(ent)
+            ent.variable.offset = self.pinakasSymvolwn.compute_offset()
+            self.pinakasSymvolwn.new_entity(ent)
 
             # Handle comma-separated identifiers
             while self.lexer_results and self.lexer_results[-1].family == "delimeter" and self.lexer_results[-1].recognized_string == ',':
@@ -678,11 +680,11 @@ class Syntaktikos:
                     self.lexer_results = self.lexer.lex_states()
 
                     # Create an Entity for each variable
-                    ent = Entity()
+                    ent = self.pinakasSymvolwn.Entity()
                     ent.type = 'VAR'
                     ent.name = id
-                    ent.variable.offset = compute_offset()
-                    new_entity(ent)
+                    ent.variable.offset = self.pinakasSymvolwn.compute_offset()
+                    self.pinakasSymvolwn.new_entity(ent)
                 else:
                     print(f"ERROR: Δεν υπάρχει όνομα μεταβλητής μετά το κόμμα, line {self.lexer_results[-1].line_number}")
                     exit(-1)
@@ -698,10 +700,10 @@ class Syntaktikos:
                 self.lexer_results = self.lexer.lex_states()
 
                 # Create an Argument for the parameter
-                arg = Argument()
+                arg = self.pinakasSymvolwn.Argument()
                 arg.name = id
                 arg.parMode = ''  # Mode will be updated later
-                new_argument(arg)
+                self.pinakasSymvolwn.new_argument(arg)
 
                 # Handle comma-separated identifiers
                 while self.lexer_results and self.lexer_results[-1].family == "delimeter" and self.lexer_results[-1].recognized_string == ',':
@@ -711,10 +713,10 @@ class Syntaktikos:
                         self.lexer_results = self.lexer.lex_states()
 
                         # Create an Argument for each parameter
-                        arg = Argument()
+                        arg = self.pinakasSymvolwn.Argument()
                         arg.name = id
                         arg.parMode = ''  # Mode will be updated later
-                        new_argument(arg)
+                        self.pinakasSymvolwn.new_argument(arg)
                     else:
                         print(f"ERROR: Δεν υπάρχει όνομα παραμέτρου μετά το κόμμα, line {self.lexer_results[-1].line_number}")
                         exit(-1)
@@ -730,7 +732,7 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
 
             # Update the parameter mode to CV (Call by Value)
-            for arg in scopesList[-1].entityList[-1].subprogram.argumentList:
+            for arg in self.pinakasSymvolwn.allSymbolsList[-1].entityList[-1].funcorproc.arguments:
                 if arg.name == id:
                     arg.parMode = 'CV'
 
@@ -742,7 +744,7 @@ class Syntaktikos:
                     self.lexer_results = self.lexer.lex_states()
 
                     # Update the parameter mode to CV for each identifier
-                    for arg in scopesList[-1].entityList[-1].subprogram.argumentList:
+                    for arg in self.pinakasSymvolwn.allSymbolsList[-1].entityList[-1].funcorproc.arguments:
                         if arg.name == id:
                             arg.parMode = 'CV'
                 else:
@@ -760,7 +762,7 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
 
             # Update the parameter mode to REF (Call by Reference)
-            for arg in scopesList[-1].entityList[-1].subprogram.argumentList:
+            for arg in self.pinakasSymvolwn.allSymbolsList[-1].entityList[-1].funcorproc.arguments:
                 if arg.name == id:
                     arg.parMode = 'REF'
 
@@ -772,7 +774,7 @@ class Syntaktikos:
                     self.lexer_results = self.lexer.lex_states()
 
                     # Update the parameter mode to REF for each identifier
-                    for arg in scopesList[-1].entityList[-1].subprogram.argumentList:
+                    for arg in self.pinakasSymvolwn.allSymbolsList[-1].entityList[-1].funcorproc.arguments:
                         if arg.name == id:
                             arg.parMode = 'REF'
                 else:
@@ -802,11 +804,11 @@ class Syntaktikos:
                 
                 if self.lexer_results and self.lexer_results[-1].recognized_string == '(':
                     self.lexer_results = self.lexer.lex_states()
-                    ent = Entity()						
+                    ent = self.pinakasSymvolwn.Entity()						
                     ent.type = 'SUBPR'				
                     ent.name = id					
-                    ent.subprogram.type = 'Function'	
-                    new_entity(ent)
+                    ent.funcorproc.type = 'Function'	
+                    self.pinakasSymvolwn.new_entity(ent)
                     
                     self.formalparlist()
 
@@ -835,11 +837,11 @@ class Syntaktikos:
                 self.lexer_results = self.lexer.lex_states()
                 if self.lexer_results and self.lexer_results[-1].recognized_string == '(':
                     self.lexer_results = self.lexer.lex_states()
-                    ent = Entity()						
+                    ent = self.pinakasSymvolwn.Entity()						
                     ent.type = 'SUBPR'				
                     ent.name = id					
-                    ent.subprogram.type = 'Procedure'	
-                    new_entity(ent)
+                    ent.funcorproc.type = 'Procedure'	
+                    self.pinakasSymvolwn.new_entity(ent)
                     
                     self.formalparlist()
                     if self.lexer_results and self.lexer_results[-1].recognized_string == ')':
@@ -860,7 +862,7 @@ class Syntaktikos:
         
 
         if self.lexer_results and self.lexer_results[-1].family == "identifier":
-            self.varlist()
+            self.varlist_formalparlist()
         else:
             print(f"ERROR: Δεν υπάρχει id sti formalparlist, line {self.lexer_results[-1].line_number}")
             exit(-1)
@@ -872,21 +874,21 @@ class Syntaktikos:
             self.funcinput()
             self.funcoutput()
             
-            new_scope(name)
-            add_parameters()
+            self.pinakasSymvolwn.new_scope(name)
+            self.pinakasSymvolwn.add_parameters()
             
             self.declarations()
             self.subprograms()
             if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_συνάρτησης":
                 self.lexer_results = self.lexer.lex_states()
 
-                compute_startQuad()
+                self.pinakasSymvolwn.compute_startQuad()
                 self.endiamesos.genQuad('begin_block', name, '_', '_')
                 self.sequence()
-                compute_framelength()
+                self.pinakasSymvolwn.compute_framelength()
                 self.endiamesos.genQuad('end_block', name, '_', '_')
-                print_Symbol_table()
-                delete_scope()
+                self.pinakasSymvolwn.print_Table()
+                self.pinakasSymvolwn.delete_scope()
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_συνάρτησης":
                     self.lexer_results = self.lexer.lex_states()
                 else:
@@ -907,21 +909,21 @@ class Syntaktikos:
             self.lexer_results = self.lexer.lex_states()
             self.funcinput()
             self.funcoutput()
-            new_scope(name)
-            add_parameters()
+            self.pinakasSymvolwn.new_scope(name)
+            self.pinakasSymvolwn.add_parameters()
             self.declarations()
             self.subprograms()
             if self.lexer_results and self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "αρχή_διαδικασίας":
                 self.lexer_results = self.lexer.lex_states()
 
-                compute_startQuad()
+                self.pinakasSymvolwn.compute_startQuad()
                 self.endiamesos.genQuad('begin_block', name, '_', '_')
                 self.sequence()
-                compute_framelength()
+                self.pinakasSymvolwn.compute_framelength()
                 self.endiamesos.genQuad('end_block',name,'_','_')
 
-                print_Symbol_table()
-                delete_scope()
+                self.pinakasSymvolwn.print_Table()
+                self.pinakasSymvolwn.delete_scope()
                 
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_διαδικασίας":
                     self.lexer_results = self.lexer.lex_states()
