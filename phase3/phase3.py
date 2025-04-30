@@ -570,7 +570,7 @@ class Syntaktikos:
         self.endiamesos = EndiamesosKwdikas()
         self.pinakasSymvolwn = SymbolTable()
         self.outputIntFile = open('intFile.int', 'w', encoding='utf-8')
-        self.outputSymFile = open('symbolTable.sym', 'w', encoding='utf-8')
+        self.outputSymFile = open('symbolFile.sym', 'w', encoding='utf-8')
         self.count = 1
         self.program()
         
