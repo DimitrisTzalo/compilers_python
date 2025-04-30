@@ -375,7 +375,7 @@ class Lex:
         
        
 ## 2nd Phase ENDIAMESOS KWDIKAS ##
-## genQuad newTemp backPatch na einai diaforetika ##
+
 
 class EndiamesosKwdikas:
     
@@ -1206,13 +1206,13 @@ class Syntaktikos:
         for i in range(lenQuads):
             quad = self.endiamesos.total_quads[i]
             x.write(str(quad[0]))
-            x.write(":  ")
+            x.write(": ")
             x.write(str(quad[1]))
-            x.write("  ")
+            x.write(", ")
             x.write(str(quad[2]))
-            x.write("  ")
+            x.write(", ")
             x.write(str(quad[3]))
-            x.write("  ")
+            x.write(", ")
             x.write(str(quad[4]))
             x.write("\n")
 
