@@ -377,66 +377,18 @@ class Lex:
 ## 2nd Phase ENDIAMESOS KWDIKAS ##
 ## genQuad newTemp backPatch na einai diaforetika ##
 
-class EndiamesosKwdikas:
-    
-    def __init__(self):
-        self.total_quads = []
-        self.count = 1
-        self.T_i = 1
-    
-    def nextQuad(self):
-        
-        return self.count
-    
-    def genQuad(self, one, two, three, four):
-        quad = [self.nextQuad(), one, two, three, four] #dhmioyrgia 4adas
-        self.total_quads.append(quad)
-        self.count += 1
-        return quad
-    
-    def newTemp(self):
-        
-        tmp = "T_"+ str(self.T_i)
-        self.T_i +=1
-
-        return tmp
-    
-    def emptyList(self):
-        
-        return []
-    
-    def makeList(self, x):
-        
-        return [x]
-
-    def merge(self, i, j):
-
-        return (i + j)
-
-    def backPatch(self, l, label_target):
-        # to l einai lista me deiktes pou deixnoyn poia quads den einai symplhrwmena 
-
-        for quad_index in l:
-            for quad in self.total_quads:
-                if quad[0] == quad_index and quad[-1] == '_':
-                    quad[-1] = label_target
-                    break
-        return 
-
 
 ### PINAKAS SYMBOLWN ####
 
 class SymbolTable:
     def __init__(self):
-        self.endiamesos = EndiamesosKwdikas()
         self.allSymbolsList = [] ## edo einai o pinakas
         self.entity = self.Entity()
         self.scope = self.Scope()
         self.argument = self.Argument()
+        self.endiamesos = EndiamesosKwdikas()
 
-        outputFile = open('symbolTable.sym', 'w', encoding='utf-8')
-        self.print_Table()
-        outputFile.close()
+       
     
     class Entity: #orthogwnio
         def __init__(self):
@@ -505,7 +457,7 @@ class SymbolTable:
         tmp = self.Scope()
         tmp.name = newScope
 
-        self.Scope.nestingLevel = (self.allSymbolsList[-1].nestingLevel + 1) if self.allSymbolsList else 0
+        tmp.nestingLevel = (self.allSymbolsList[-1].nestingLevel + 1) if self.allSymbolsList else 0
 
         self.allSymbolsList.append(tmp)
     
@@ -523,7 +475,7 @@ class SymbolTable:
         if not self.allSymbolsList or not self.allSymbolsList[-1].entityList:
             return 12 
 
-        count = sum(1 for ent in self.allSymbolsList[-1].entityList if ent.type in ('VAR', 'TEMP', 'PARAM'))
+        count = sum(1 for ent in self.allSymbolsList[-1].entityList if ent.entityType in ('VAR', 'TEMP', 'PARAM'))
 
         return 12 + count * 4
 
@@ -544,44 +496,70 @@ class SymbolTable:
         for i in self.allSymbolsList[-2].entityList[-1].funcorproc.arguments:
             ent = self.Entity()
             ent.name = i.name
-            ent.type = 'PARAM'
-            ent.parameter.mode = i.parMode
+            ent.entityType = 'PARAM'
+            ent.parameter.parMode = i.parMode
             ent.parameter.offest = self.compute_offset()
             self.new_entity(ent)
     
-    def print_Table(self):
+   
         
 
-        self.outputFile.write("#" * 90 + "\n")
+class EndiamesosKwdikas:
+    
+    def __init__(self):
+        self.total_quads = []
+        self.count = 1
+        self.T_i = 1
 
-        for scope in reversed(self.allSymbolsList):
-            # Print scope details
-            self.outputFile.write(f"SCOPE: name: {scope.name} nestingLevel: {scope.nestingLevel}\n")
-            self.outputFile.write("\tENTITIES:\n")
-
-            for entity in scope.entityList:
-                # Print common entity details
-                self.outputFile.write(f"\tENTITY: name: {entity.name} type: {entity.entityType}")
-
-                # Handle specific entity types
-                if entity.entityType == 'VAR':
-                    self.outputFile.write(f" variable-type: {entity.variable.type} offset: {entity.variable.offset}")
-                elif entity.entityType == 'TEMP':
-                    self.outputFile.write(f" temp-type: {entity.tmpvariable.type} offset: {entity.tmpvariable.offset}")
-                elif entity.entityType == 'SUBPR':
-                    self.outputFile.write(f" subprogram-type: {entity.funcorproc.type} startQuad: {entity.funcorproc.startQuad} frameLength: {entity.funcorproc.frameLength}")
-                    self.outputFile.write("\n\t\tARGUMENTS:")
-                    for argument in entity.funcorproc.arguments:
-                       self.outputFile.write(f"\n\t\tARGUMENT: name: {argument.name} type: {argument.type} parMode: {argument.parMode}")
-                elif entity.entityType == 'PARAM':
-                    self.outputFile.write(f" mode: {entity.parameter.parMode} offset: {entity.parameter.offest}")
-
-                self.outputFile.write("\n")
-
-            self.outputFile.write("\n")
-
-        self.outputFile.write("#" * 90 + "\n\n")
+    
+    def nextQuad(self):
         
+        return self.count
+    
+    def genQuad(self, one, two, three, four):
+        quad = [self.nextQuad(), one, two, three, four] #dhmioyrgia 4adas
+        self.total_quads.append(quad)
+        self.count += 1
+        return quad
+    
+    def newTemp(self, pinakas):
+        
+        tmp = "T_"+ str(self.T_i)
+        self.T_i +=1
+
+        ent = pinakas.Entity()
+        ent.entityType = 'TEMP'
+        ent.name = tmp
+        ent.tmpvariable.type = 'Int'
+        ent.tmpvariable.offset = pinakas.compute_offset()
+        pinakas.new_entity(ent)
+
+        return tmp
+    
+    def emptyList(self):
+        
+        return []
+    
+    def makeList(self, x):
+        
+        return [x]
+
+    def merge(self, i, j):
+
+        return (i + j)
+
+    def backPatch(self, l, label_target):
+        # to l einai lista me deiktes pou deixnoyn poia quads den einai symplhrwmena 
+
+        for quad_index in l:
+            for quad in self.total_quads:
+                if quad[0] == quad_index and quad[-1] == '_':
+                    quad[-1] = label_target
+                    break
+        return 
+
+
+
 class Syntaktikos:
     def __init__(self, line_number, file_path, token):
         self.line_number = line_number
@@ -591,12 +569,16 @@ class Syntaktikos:
         self.lexer_results = []
         self.endiamesos = EndiamesosKwdikas()
         self.pinakasSymvolwn = SymbolTable()
+        self.outputIntFile = open('intFile.int', 'w', encoding='utf-8')
+        self.outputSymFile = open('symbolTable.sym', 'w', encoding='utf-8')
         self.program()
         
         
-        outputFile = open('intFile.int', 'w', encoding='utf-8')
-        self.intCode(outputFile)
-        outputFile.close()
+        self.intCode(self.outputIntFile)
+        self.outputIntFile.close()
+
+        self.symTable(self.outputSymFile)
+        self.outputSymFile.close()
         
 
     def program(self):
@@ -643,7 +625,7 @@ class Syntaktikos:
             self.endiamesos.genQuad('halt','_','_','_')
             self.endiamesos.genQuad('end_block',name,'_','_')
             
-            self.pinakasSymvolwn.print_Table()
+            self.symTable(self.outputSymFile)
             self.pinakasSymvolwn.delete_scope()
 
             if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_προγράμματος":
@@ -671,9 +653,9 @@ class Syntaktikos:
 
             # Create an Entity for the variable
             ent = self.pinakasSymvolwn.Entity()
-            ent.type = 'VAR'
+            ent.entityType = 'VAR'
             ent.name = id
-            ent.variable.type = 'int'  # Assuming all variables are of type int for now
+            ent.variable.type = 'Int'  
             ent.variable.offset = self.pinakasSymvolwn.compute_offset()
             self.pinakasSymvolwn.new_entity(ent)
 
@@ -686,7 +668,7 @@ class Syntaktikos:
 
                     # Create an Entity for each variable
                     ent = self.pinakasSymvolwn.Entity()
-                    ent.type = 'VAR'
+                    ent.entityType = 'VAR'
                     ent.name = id
                     ent.variable.offset = self.pinakasSymvolwn.compute_offset()
                     self.pinakasSymvolwn.new_entity(ent)
@@ -708,6 +690,7 @@ class Syntaktikos:
                 arg = self.pinakasSymvolwn.Argument()
                 arg.name = id
                 arg.parMode = ''  # Mode will be updated later
+                arg.type = 'Int'  
                 self.pinakasSymvolwn.new_argument(arg)
 
                 # Handle comma-separated identifiers
@@ -721,6 +704,7 @@ class Syntaktikos:
                         arg = self.pinakasSymvolwn.Argument()
                         arg.name = id
                         arg.parMode = ''  # Mode will be updated later
+                        arg.type = 'Int'
                         self.pinakasSymvolwn.new_argument(arg)
                     else:
                         print(f"ERROR: Δεν υπάρχει όνομα παραμέτρου μετά το κόμμα, line {self.lexer_results[-1].line_number}")
@@ -810,7 +794,7 @@ class Syntaktikos:
                 if self.lexer_results and self.lexer_results[-1].recognized_string == '(':
                     self.lexer_results = self.lexer.lex_states()
                     ent = self.pinakasSymvolwn.Entity()						
-                    ent.type = 'SUBPR'				
+                    ent.entityType = 'SUBPR'				
                     ent.name = id					
                     ent.funcorproc.type = 'Function'	
                     self.pinakasSymvolwn.new_entity(ent)
@@ -843,7 +827,7 @@ class Syntaktikos:
                 if self.lexer_results and self.lexer_results[-1].recognized_string == '(':
                     self.lexer_results = self.lexer.lex_states()
                     ent = self.pinakasSymvolwn.Entity()						
-                    ent.type = 'SUBPR'				
+                    ent.entityType = 'SUBPR'				
                     ent.name = id					
                     ent.funcorproc.type = 'Procedure'	
                     self.pinakasSymvolwn.new_entity(ent)
@@ -892,7 +876,7 @@ class Syntaktikos:
                 self.sequence()
                 self.pinakasSymvolwn.compute_framelength()
                 self.endiamesos.genQuad('end_block', name, '_', '_')
-                self.pinakasSymvolwn.print_Table()
+                self.symTable(self.outputSymFile)
                 self.pinakasSymvolwn.delete_scope()
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_συνάρτησης":
                     self.lexer_results = self.lexer.lex_states()
@@ -927,7 +911,7 @@ class Syntaktikos:
                 self.pinakasSymvolwn.compute_framelength()
                 self.endiamesos.genQuad('end_block',name,'_','_')
 
-                self.pinakasSymvolwn.print_Table()
+                self.symTable(self.outputSymFile)
                 self.pinakasSymvolwn.delete_scope()
                 
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_διαδικασίας":
@@ -1254,7 +1238,7 @@ class Syntaktikos:
             self.actualpars()
 
             if (caller == 1):
-                w = self.endiamesos.newTemp()
+                w = self.endiamesos.newTemp(self.pinakasSymvolwn)
                 self.endiamesos.genQuad('par', w, 'RET', '_')
                 self.endiamesos.genQuad('call', name, '_', '_')
                 return w
@@ -1393,7 +1377,7 @@ class Syntaktikos:
         T_1place = self.term()
 
         if ( optional_sign =='-' ):
-            w = self.endiamesos.newTemp()
+            w = self.endiamesos.newTemp(self.pinakasSymvolwn)
             self.endiamesos.genQuad('-', '0', T_1place, w)
             T_1place = w
 
@@ -1403,7 +1387,7 @@ class Syntaktikos:
             T_2place = self.term()
 
             #{P1}:
-            w = self.endiamesos.newTemp()
+            w = self.endiamesos.newTemp(self.pinakasSymvolwn)
             self.endiamesos.genQuad(add_Operation, T_1place, T_2place, w)
             T_1place = w
         
@@ -1421,7 +1405,7 @@ class Syntaktikos:
             F_2place = self.factor()
 
             #{P1}:
-            w = self.endiamesos.newTemp()
+            w = self.endiamesos.newTemp(self.pinakasSymvolwn)
             self.endiamesos.genQuad(mul_Operation, F_1place, F_2place, w)
             F_1place = w
         #{P2}:
@@ -1512,15 +1496,47 @@ class Syntaktikos:
         for i in range(lenQuads):
             quad = self.endiamesos.total_quads[i]
             x.write(str(quad[0]))
-            x.write(":  ")
+            x.write(": ")
             x.write(str(quad[1]))
-            x.write("  ")
+            x.write(", ")
             x.write(str(quad[2]))
-            x.write("  ")
+            x.write(", ")
             x.write(str(quad[3]))
-            x.write("  ")
+            x.write(", ")
             x.write(str(quad[4]))
             x.write("\n")
+    def symTable(self, x):
+        
+
+        x.write("#" * 90 + "\n")
+
+        for scope in reversed(self.pinakasSymvolwn.allSymbolsList):
+            # Print scope details
+            x.write(f"SCOPE: name: {scope.name} nestingLevel: {scope.nestingLevel}\n")
+            x.write("\tENTITIES:\n")
+
+            for entity in scope.entityList:
+                # Print common entity details
+                x.write(f"\tENTITY: name: {entity.name} type: {entity.entityType}")
+
+                # Handle specific entity types
+                if entity.entityType == 'VAR':
+                    x.write(f" variable-type: {entity.variable.type} offset: {entity.variable.offset}")
+                elif entity.entityType == 'TEMP':
+                    x.write(f" temp-type: {entity.tmpvariable.type} offset: {entity.tmpvariable.offset}")
+                elif entity.entityType == 'SUBPR':
+                    x.write(f" subprogram-type: {entity.funcorproc.type} startQuad: {entity.funcorproc.startQuad} frameLength: {entity.funcorproc.frameLength}")
+                    x.write("\n\t\tARGUMENTS:")
+                    for argument in entity.funcorproc.arguments:
+                       x.write(f"\n\t\tARGUMENT: name: {argument.name} type: {argument.type} parMode: {argument.parMode}")
+                elif entity.entityType == 'PARAM':
+                    x.write(f" mode: {entity.parameter.parMode} offset: {entity.parameter.offest}")
+
+                x.write("\n")
+
+            x.write("\n")
+
+        x.write("#" * 90 + "\n\n")
 
 
 file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")

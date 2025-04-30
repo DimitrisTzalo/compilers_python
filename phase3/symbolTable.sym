@@ -1,0 +1,99 @@
+##########################################################################################
+SCOPE: name: fibonacci nestingLevel: 1
+	ENTITIES:
+	ENTITY: name: x type: PARAM mode: CV offset: 12
+	ENTITY: name: T_1 type: TEMP temp-type: Int offset: 16
+	ENTITY: name: T_2 type: TEMP temp-type: Int offset: 20
+	ENTITY: name: T_3 type: TEMP temp-type: Int offset: 24
+	ENTITY: name: T_4 type: TEMP temp-type: Int offset: 28
+	ENTITY: name: T_5 type: TEMP temp-type: Int offset: 32
+
+SCOPE: name: τεστ nestingLevel: 0
+	ENTITIES:
+	ENTITY: name: x type: VAR variable-type: Int offset: 12
+	ENTITY: name: i type: VAR variable-type:  offset: 16
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+		ARGUMENTS:
+		ARGUMENT: name: x type: Int parMode: CV
+
+##########################################################################################
+
+##########################################################################################
+SCOPE: name: divides nestingLevel: 2
+	ENTITIES:
+	ENTITY: name: x type: PARAM mode: CV offset: 12
+	ENTITY: name: y type: PARAM mode: CV offset: 16
+	ENTITY: name: z type: PARAM mode: REF offset: 20
+	ENTITY: name: T_6 type: TEMP temp-type: Int offset: 24
+	ENTITY: name: T_7 type: TEMP temp-type: Int offset: 28
+
+SCOPE: name: isPrime nestingLevel: 1
+	ENTITIES:
+	ENTITY: name: k type: PARAM mode: CV offset: 12
+	ENTITY: name: i type: VAR variable-type: Int offset: 16
+	ENTITY: name: t type: VAR variable-type:  offset: 20
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Procedure startQuad: 1 frameLength: 32
+		ARGUMENTS:
+		ARGUMENT: name: x type: Int parMode: CV
+		ARGUMENT: name: y type: Int parMode: CV
+		ARGUMENT: name: z type: Int parMode: REF
+
+SCOPE: name: τεστ nestingLevel: 0
+	ENTITIES:
+	ENTITY: name: x type: VAR variable-type: Int offset: 12
+	ENTITY: name: i type: VAR variable-type:  offset: 16
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+		ARGUMENTS:
+		ARGUMENT: name: x type: Int parMode: CV
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 0 frameLength: 0
+		ARGUMENTS:
+		ARGUMENT: name: k type: Int parMode: CV
+
+##########################################################################################
+
+##########################################################################################
+SCOPE: name: isPrime nestingLevel: 1
+	ENTITIES:
+	ENTITY: name: k type: PARAM mode: CV offset: 12
+	ENTITY: name: i type: VAR variable-type: Int offset: 16
+	ENTITY: name: t type: VAR variable-type:  offset: 20
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Procedure startQuad: 1 frameLength: 32
+		ARGUMENTS:
+		ARGUMENT: name: x type: Int parMode: CV
+		ARGUMENT: name: y type: Int parMode: CV
+		ARGUMENT: name: z type: Int parMode: REF
+	ENTITY: name: T_8 type: TEMP temp-type: Int offset: 24
+
+SCOPE: name: τεστ nestingLevel: 0
+	ENTITIES:
+	ENTITY: name: x type: VAR variable-type: Int offset: 12
+	ENTITY: name: i type: VAR variable-type:  offset: 16
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+		ARGUMENTS:
+		ARGUMENT: name: x type: Int parMode: CV
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 28
+		ARGUMENTS:
+		ARGUMENT: name: k type: Int parMode: CV
+
+##########################################################################################
+
+##########################################################################################
+SCOPE: name: τεστ nestingLevel: 0
+	ENTITIES:
+	ENTITY: name: x type: VAR variable-type: Int offset: 12
+	ENTITY: name: i type: VAR variable-type:  offset: 16
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+		ARGUMENTS:
+		ARGUMENT: name: x type: Int parMode: CV
+	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 28
+		ARGUMENTS:
+		ARGUMENT: name: k type: Int parMode: CV
+	ENTITY: name: T_9 type: TEMP temp-type: Int offset: 20
+	ENTITY: name: T_10 type: TEMP temp-type: Int offset: 24
+	ENTITY: name: T_11 type: TEMP temp-type: Int offset: 28
+
+##########################################################################################
+
+##########################################################################################
+##########################################################################################
+
