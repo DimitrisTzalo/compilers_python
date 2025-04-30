@@ -1,4 +1,6 @@
-##########################################################################################
+******************************************************************************************
+Creating Symbol Table for 1 times
+SYMBOL TABLE
 SCOPE: name: fibonacci nestingLevel: 1
 	ENTITIES:
 	ENTITY: name: x type: PARAM mode: CV offset: 12
@@ -12,13 +14,15 @@ SCOPE: name: τεστ nestingLevel: 0
 	ENTITIES:
 	ENTITY: name: x type: VAR variable-type: Int offset: 12
 	ENTITY: name: i type: VAR variable-type:  offset: 16
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+	ENTITY: name: fibonacci type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
 		ARGUMENTS:
 		ARGUMENT: name: x type: Int parMode: CV
 
-##########################################################################################
+******************************************************************************************
 
-##########################################################################################
+******************************************************************************************
+Creating Symbol Table for 2 times
+SYMBOL TABLE
 SCOPE: name: divides nestingLevel: 2
 	ENTITIES:
 	ENTITY: name: x type: PARAM mode: CV offset: 12
@@ -32,7 +36,7 @@ SCOPE: name: isPrime nestingLevel: 1
 	ENTITY: name: k type: PARAM mode: CV offset: 12
 	ENTITY: name: i type: VAR variable-type: Int offset: 16
 	ENTITY: name: t type: VAR variable-type:  offset: 20
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Procedure startQuad: 1 frameLength: 32
+	ENTITY: name: divides type: SUBPR subprogram-type: Procedure startQuad: 1 frameLength: 32
 		ARGUMENTS:
 		ARGUMENT: name: x type: Int parMode: CV
 		ARGUMENT: name: y type: Int parMode: CV
@@ -42,22 +46,24 @@ SCOPE: name: τεστ nestingLevel: 0
 	ENTITIES:
 	ENTITY: name: x type: VAR variable-type: Int offset: 12
 	ENTITY: name: i type: VAR variable-type:  offset: 16
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+	ENTITY: name: fibonacci type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
 		ARGUMENTS:
 		ARGUMENT: name: x type: Int parMode: CV
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 0 frameLength: 0
+	ENTITY: name: isPrime type: SUBPR subprogram-type: Function startQuad: 0 frameLength: 0
 		ARGUMENTS:
 		ARGUMENT: name: k type: Int parMode: CV
 
-##########################################################################################
+******************************************************************************************
 
-##########################################################################################
+******************************************************************************************
+Creating Symbol Table for 3 times
+SYMBOL TABLE
 SCOPE: name: isPrime nestingLevel: 1
 	ENTITIES:
 	ENTITY: name: k type: PARAM mode: CV offset: 12
 	ENTITY: name: i type: VAR variable-type: Int offset: 16
 	ENTITY: name: t type: VAR variable-type:  offset: 20
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Procedure startQuad: 1 frameLength: 32
+	ENTITY: name: divides type: SUBPR subprogram-type: Procedure startQuad: 1 frameLength: 32
 		ARGUMENTS:
 		ARGUMENT: name: x type: Int parMode: CV
 		ARGUMENT: name: y type: Int parMode: CV
@@ -68,32 +74,36 @@ SCOPE: name: τεστ nestingLevel: 0
 	ENTITIES:
 	ENTITY: name: x type: VAR variable-type: Int offset: 12
 	ENTITY: name: i type: VAR variable-type:  offset: 16
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+	ENTITY: name: fibonacci type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
 		ARGUMENTS:
 		ARGUMENT: name: x type: Int parMode: CV
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 28
+	ENTITY: name: isPrime type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 28
 		ARGUMENTS:
 		ARGUMENT: name: k type: Int parMode: CV
 
-##########################################################################################
+******************************************************************************************
 
-##########################################################################################
+******************************************************************************************
+Creating Symbol Table for 4 times
+SYMBOL TABLE
 SCOPE: name: τεστ nestingLevel: 0
 	ENTITIES:
 	ENTITY: name: x type: VAR variable-type: Int offset: 12
 	ENTITY: name: i type: VAR variable-type:  offset: 16
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
+	ENTITY: name: fibonacci type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 36
 		ARGUMENTS:
 		ARGUMENT: name: x type: Int parMode: CV
-	ENTITY: name: <built-in function id> type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 28
+	ENTITY: name: isPrime type: SUBPR subprogram-type: Function startQuad: 1 frameLength: 28
 		ARGUMENTS:
 		ARGUMENT: name: k type: Int parMode: CV
 	ENTITY: name: T_9 type: TEMP temp-type: Int offset: 20
 	ENTITY: name: T_10 type: TEMP temp-type: Int offset: 24
 	ENTITY: name: T_11 type: TEMP temp-type: Int offset: 28
 
-##########################################################################################
+******************************************************************************************
 
-##########################################################################################
-##########################################################################################
+******************************************************************************************
+Creating Symbol Table for 5 times
+SYMBOL TABLE
+******************************************************************************************
 

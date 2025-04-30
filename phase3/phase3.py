@@ -571,12 +571,12 @@ class Syntaktikos:
         self.pinakasSymvolwn = SymbolTable()
         self.outputIntFile = open('intFile.int', 'w', encoding='utf-8')
         self.outputSymFile = open('symbolTable.sym', 'w', encoding='utf-8')
+        self.count = 1
         self.program()
         
         
         self.intCode(self.outputIntFile)
         self.outputIntFile.close()
-
         self.symTable(self.outputSymFile)
         self.outputSymFile.close()
         
@@ -795,7 +795,7 @@ class Syntaktikos:
                     self.lexer_results = self.lexer.lex_states()
                     ent = self.pinakasSymvolwn.Entity()						
                     ent.entityType = 'SUBPR'				
-                    ent.name = id					
+                    ent.name = current_string					
                     ent.funcorproc.type = 'Function'	
                     self.pinakasSymvolwn.new_entity(ent)
                     
@@ -828,7 +828,7 @@ class Syntaktikos:
                     self.lexer_results = self.lexer.lex_states()
                     ent = self.pinakasSymvolwn.Entity()						
                     ent.entityType = 'SUBPR'				
-                    ent.name = id					
+                    ent.name = current_string					
                     ent.funcorproc.type = 'Procedure'	
                     self.pinakasSymvolwn.new_entity(ent)
                     
@@ -1507,8 +1507,11 @@ class Syntaktikos:
             x.write("\n")
     def symTable(self, x):
         
+        
 
-        x.write("#" * 90 + "\n")
+        x.write("*" * 90 + "\n")
+        x.write(f"Creating Symbol Table for {self.count} times\n")
+        x.write("SYMBOL TABLE\n")
 
         for scope in reversed(self.pinakasSymvolwn.allSymbolsList):
             # Print scope details
@@ -1536,7 +1539,8 @@ class Syntaktikos:
 
             x.write("\n")
 
-        x.write("#" * 90 + "\n\n")
+        x.write("*" * 90 + "\n\n")
+        self.count += 1
 
 
 file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")
