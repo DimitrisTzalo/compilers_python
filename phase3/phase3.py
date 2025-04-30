@@ -577,7 +577,7 @@ class Syntaktikos:
         
         self.intCode(self.outputIntFile)
         self.outputIntFile.close()
-        self.symTable(self.outputSymFile)
+        self.outputSymFile.write("SYMBOL TABLE has been completed\n")
         self.outputSymFile.close()
         
 
