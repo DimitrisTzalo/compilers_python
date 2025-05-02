@@ -480,8 +480,7 @@ class SymbolTable:
         return 12 + count * 4
 
     def compute_startQuad(self):
-        ## setting the startQuad ensures that the subprogram's starting point is correctly recorded and can be used for 
-        # generating and linking intermediate code.
+        
 
         if len(self.allSymbolsList) > 1:
             self.allSymbolsList[-2].entityList[-1].funcorproc.startQuad = self.endiamesos.nextQuad()
