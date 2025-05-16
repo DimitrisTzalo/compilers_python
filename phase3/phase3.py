@@ -5,6 +5,7 @@
 import string
 import sys
 import argparse
+import os
 
 class Token:
     def __init__(self, recognized_string, family, line_number):
@@ -625,6 +626,9 @@ class Syntaktikos:
             self.endiamesos.genQuad('end_block',name,'_','_')
             
             self.symTable(self.outputSymFile)
+            
+            final()
+            
             self.pinakasSymvolwn.delete_scope()
 
             if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_προγράμματος":
@@ -876,6 +880,9 @@ class Syntaktikos:
                 self.pinakasSymvolwn.compute_framelength()
                 self.endiamesos.genQuad('end_block', name, '_', '_')
                 self.symTable(self.outputSymFile)
+                
+                final()
+                
                 self.pinakasSymvolwn.delete_scope()
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_συνάρτησης":
                     self.lexer_results = self.lexer.lex_states()
@@ -911,6 +918,9 @@ class Syntaktikos:
                 self.endiamesos.genQuad('end_block',name,'_','_')
 
                 self.symTable(self.outputSymFile)
+                
+                final()
+                
                 self.pinakasSymvolwn.delete_scope()
                 
                 if self.lexer_results[-1].family == "keyword" and self.lexer_results[-1].recognized_string == "τέλος_διαδικασίας":
@@ -1540,6 +1550,262 @@ class Syntaktikos:
 
         x.write("*" * 90 + "\n\n")
         self.count += 1
+
+
+class Final():
+    
+    asc_file = open('ascFile.asm','w') # vazw tis entoles telikou kodika (allagi onomatos)
+    asc_file.write('         \n\n\n') # afino keno wste na mpei to "j Lmain"
+    
+    def __init__(self, scopesList, listOfAllQuads, asc_file):
+        self.scopesList = scopesList
+        self.listOfAllQuads = listOfAllQuads
+        self.asc_file = asc_file
+        
+    
+    def search_entity(self, n):
+        for sco in reversed(self.scopesList):
+            for ent in sco.entityList:
+                if ent.name == n:
+                    return (sco, ent)
+        print("Den brethike ston pinaka simbolon entity me onoma " + str(n))
+        exit(-1)
+        
+    def gnlvcode(self, name):
+        self.asc_file.write('lw t0,-4(sp)\n')
+        sc1, ent1 = self.search_entity(name)
+        my_help = self.scopesList[-1].nestingLevel - sc1.nestingLevel - 1
+        for _ in range(my_help):
+            self.asc_file.write('lw t0,-4(t0)\n')
+        if ent1.type == 'VAR':
+            x = ent1.variable.offset
+        elif ent1.type == 'PARAM':
+            x = ent1.parameter.offset
+        self.asc_file.write(f'addi t0,t0,-{x}\n')
+
+    def loadvr(self, v, r):  #DIAFANEIES 26 eos 32 (r akeraios, v string)
+        
+        if v.isdigit():
+            self.asc_file.write(f'li t{r},{v}\n')
+            
+        else:
+            
+            sc1, ent1 = self.search_entity(v)
+            
+            #DIAFANEIA 26 
+            if sc1.nestingLevel == 0 and ent1.type == 'VAR':
+                self.asc_file.write(f'lw t{r},-{ent1.variable.offset}(gp)\n')
+                
+            elif sc1.nestingLevel == self.scopesList[-1].nestingLevel:
+                
+                
+                if ent1.type == 'TEMP':
+                    self.asc_file.write(f'lw t{r},-{ent1.tmpvariable.offset}(sp)\n')
+                elif ent1.type == 'VAR':
+                    self.asc_file.write(f'lw t{r},-{ent1.variable.offset}(sp)\n')
+                
+                elif ent1.type == 'PARAM' and ent1.parameter.mode == 'CV':
+                    self.asc_file.write(f'lw t{r},-{ent1.parameter.offset}(sp)\n')
+                elif ent1.type == 'PARAM' and ent1.parameter.mode == 'REF':
+                    self.asc_file.write(f'lw t0,-{ent1.parameter.offset}(sp)\n')
+                    self.asc_file.write(f'lw t{r},(t0)\n')
+                    
+            elif sc1.nestingLevel < self.scopesList[-1].nestingLevel:
+                
+                if ent1.type == 'VAR' or (ent1.type == 'PARAM' and ent1.parameter.mode == 'CV'):
+                    self.gnlvcode(v)
+                    self.asc_file.write(f'lw t{r},(t0)\n')
+                    
+                elif ent1.type == 'PARAM' and ent1.parameter.mode == 'REF':
+                    self.gnlvcode(v)
+                    self.asc_file.write('lw t0,(t0)\n')
+                    self.asc_file.write(f'lw t{r},(t0)\n')
+    
+    def storerv(self, r, v):
+        
+        sc1, ent1 = self.search_entity(v)
+        
+        if sc1.nestingLevel == 0 and ent1.type == 'VAR':
+            self.asc_file.write(f'sw t{r},-{ent1.variable.offset}(gp)\n')
+            
+        elif sc1.nestingLevel == self.scopesList[-1].nestingLevel:
+            
+            if ent1.type == 'VAR':
+                self.asc_file.write(f'sw t{r},-{ent1.variable.offset}(sp)\n')
+            elif ent1.type == 'TEMP':
+                self.asc_file.write(f'sw t{r},-{ent1.tmpvariable.offset}(sp)\n')
+            elif ent1.type == 'PARAM' and ent1.parameter.mode == 'CV':
+                self.asc_file.write(f'sw t{r},-{ent1.parameter.offset}(sp)\n')
+            elif ent1.type == 'PARAM' and ent1.parameter.mode == 'REF':
+                self.asc_file.write(f'lw t0,-{ent1.parameter.offset}(sp)\n')
+                self.asc_file.write(f'sw t{r},(t0)\n')
+                
+        elif sc1.nestingLevel < self.scopesList[-1].nestingLevel:
+            
+            if ent1.type == 'VAR' or (ent1.type == 'PARAM' and ent1.parameter.mode == 'CV'):
+                self.gnlvcode(v)
+                self.asc_file.write(f'sw t{r},(t0)\n')
+            elif ent1.type == 'PARAM' and ent1.parameter.mode == 'REF':
+                self.gnlvcode(v)
+                self.asc_file.write('lw t0,(t0)\n')
+                self.asc_file.write(f'sw t{r},(t0)\n')
+            #DIAFANEIA 35 (katw) αν v είναι τυπική παράμετρος που περνάει με αναφορά    
+            elif ent1.type == 'SUBPR' and ent1.subprogram.type == 'Function':
+                self.asc_file.write('lw t0,-8(sp)\n')
+                self.asc_file.write(f'sw t{r},(t0)\n')
+                
+                
+    def search_list_for_call(self, i):
+        """
+        Ψάχνει να βρει το 'call' ξεκινώντας από το i και προς τα εμπρός.
+        Επιστρέφει το όνομα του υποπρογράμματος που καλείται.
+        """
+        start = i
+        while start < len(self.listOfAllQuads):
+            if self.listOfAllQuads[start][1] == 'call':
+                return str(self.listOfAllQuads[start][2])
+            start += 1
+        return None  # Αν δεν βρεθεί, επιστρέφει None
+    
+def final(self):
+        for i in range(len(self.listOfAllQuads)):
+            quad = self.listOfAllQuads[i]
+            self.asc_file.write(f'L{quad[0]}: \n')
+
+            op = quad[1]
+            if op == 'jump':
+                self.asc_file.write(f'b L{quad[4]}\n')
+            elif op == '=':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write(f'beq t1,t2,L{quad[4]}\n')
+            elif op == '<>':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write(f'bne t1,t2,L{quad[4]}\n')
+            elif op == '>':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write(f'bgt t1,t2,L{quad[4]}\n')
+            elif op == '<':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write(f'blt t1,t2,L{quad[4]}\n')
+            elif op == '>=':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write(f'bge t1,t2,L{quad[4]}\n')
+            elif op == '<=':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write(f'ble t1,t2,L{quad[4]}\n')
+            elif op == ':=':
+                self.loadvr(quad[2], 1)
+                self.storerv(1, quad[4])
+            elif op == '+':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write('add t1,t1,t2\n')
+                self.storerv(1, quad[4])
+            elif op == '-':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write('sub t1,t1,t2\n')
+                self.storerv(1, quad[4])
+            elif op == '*':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write('mul t1,t1,t2\n')
+                self.storerv(1, quad[4])
+            elif op == '/':
+                self.loadvr(quad[2], 1)
+                self.loadvr(quad[3], 2)
+                self.asc_file.write('div t1,t1,t2\n')
+                self.storerv(1, quad[4])
+            elif op == 'out':
+                self.loadvr(quad[2], 1)
+                self.asc_file.write('mv a0,t1\n')
+                self.asc_file.write('li a7,1\n')
+                self.asc_file.write('ecall\n')
+            elif op == 'input' or op == 'inp':
+                self.asc_file.write('li a7,5\n')
+                self.asc_file.write('ecall\n')
+                self.asc_file.write('mv t1,a0\n')
+                self.storerv(1, quad[2])
+            elif op == 'par':
+                if self.seira == -1:
+                    fname = self.search_list_for_call(i)
+                    sc1, ent1 = self.search_entity(fname)
+                    self.asc_file.write(f'addi fp,sp,{ent1.funcorproc.frameLength}\n')
+                    self.seira = 0
+                if quad[3] == 'CV':
+                    self.loadvr(quad[2], 0)
+                    self.asc_file.write(f'sw t0,-{12+4*self.seira}(fp)\n')
+                    self.seira += 1
+                elif quad[3] == 'RET':
+                    sc1, ent1 = self.search_entity(quad[2])
+                    self.asc_file.write(f'addi t0,sp,-{ent1.tmpvariable.offset}\n')
+                    self.asc_file.write('sw t0,-8(fp)\n')
+                elif quad[3] == 'REF':
+                    sc1, ent1 = self.search_entity(quad[2])
+                    if sc1.nestingLevel == self.scopesList[-1].nestingLevel:
+                        if ent1.type == 'VAR':
+                            self.asc_file.write(f'addi t0,sp,-{ent1.variable.offset}\n')
+                            self.asc_file.write(f'sw t0,-{12+4*self.seira}(fp)\n')
+                        elif ent1.type == 'PARAM' and ent1.parameter.mode == 'CV':
+                            self.asc_file.write(f'addi t0,sp,-{ent1.parameter.offset}\n')
+                            self.asc_file.write(f'sw t0,-{12+4*self.seira}(fp)\n')
+                        elif ent1.type == 'PARAM' and ent1.parameter.mode == 'REF':
+                            self.asc_file.write(f'lw t0,-{ent1.parameter.offset}(sp)\n')
+                            self.asc_file.write(f'sw t0,-{12+4*self.seira}(fp)\n')
+                    elif sc1.nestingLevel < self.scopesList[-1].nestingLevel:
+                        if ent1.type == 'PARAM' and ent1.parameter.mode == 'REF':
+                            self.gnlvcode(quad[2])
+                            self.asc_file.write('lw t0,(t0)\n')
+                            self.asc_file.write(f'sw t0,-{12+4*self.seira}(fp)\n')
+                        else:
+                            self.gnlvcode(quad[2])
+                            self.asc_file.write(f'sw t0,-{12+4*self.seira}(fp)\n')
+                    self.seira += 1
+            elif op == 'call':
+                self.seira = -1
+                sc1, ent1 = self.search_entity(quad[2])
+                if self.scopesList[-1].nestingLevel == ent1.funcorproc.nestingLevel:
+                    self.asc_file.write('lw t0,-4(sp)\n')
+                    self.asc_file.write('sw t0,-4(fp)\n')
+                elif self.scopesList[-1].nestingLevel < ent1.funcorproc.nestingLevel:
+                    self.asc_file.write('sw sp,-4(fp)\n')
+                self.asc_file.write(f'addi sp,sp,{ent1.funcorproc.frameLength}\n')
+                self.asc_file.write(f'jal L{ent1.funcorproc.startQuad}\n')
+                self.asc_file.write(f'addi sp,sp,-{ent1.funcorproc.frameLength}\n')
+            elif op == 'begin_block' and self.scopesList[-1].nestingLevel != 0:
+                self.asc_file.write('sw ra,(sp)\n')
+            elif op == 'begin_block' and self.scopesList[-1].nestingLevel == 0:
+                self.asc_file.seek(0, os.SEEK_SET)
+                self.asc_file.write(f'j L{quad[0]}\n')
+                self.asc_file.seek(0, os.SEEK_END)
+                # Υπολόγισε το offset με βάση το τρέχον scope
+                offset = 0
+                if self.scopesList:
+                    offset = 12 + 4 * sum(1 for ent in self.scopesList[-1].entityList if ent.entityType in ('VAR', 'TEMP', 'PARAM'))
+                self.asc_file.write(f'addi sp,sp,{offset}\n')
+                self.asc_file.write('mv gp,sp\n')
+            elif op == 'end_block' and self.scopesList[-1].nestingLevel != 0:
+                self.asc_file.write('lw ra,(sp)\n')
+                self.asc_file.write('jr ra\n')
+            elif op == 'halt':
+                self.asc_file.write('li a0,0\n')
+                self.asc_file.write('li a7,93\n')
+                self.asc_file.write('ecall\n')
+
+        # Καθάρισε τις τετράδες για το επόμενο scope/block
+        self.listOfAllQuads.clear()
+        
+
+
+    
+    
+    
 
 
 file_path = input("Δώσε το όνομα του αρχείου για ανάλυση: ")
