@@ -120,5 +120,7 @@ This project is educational and non-commercial, intended solely for academic use
 
 ## Special Thanks
 I would like to sincerely thank my collaborator, Dimitrios Pagonis, for his valuable contribution and support throughout the project.
+
+
 Modified for the undergraduate course MYY802 Compilers (Department of Computer Science and 
 Engineering, School of Engineering, University of Ioannina, Greece) by Mr. Georgios Manis. 
